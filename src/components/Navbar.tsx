@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useAuth } from "../context/AuthContext";
+import Image from "next/image";
 
-const Navbar = ({ children }: { children: React.ReactNode }) => {
+const Navbar = () => {
     const { user, logOut } = useAuth();
     const router = useRouter();
 
@@ -29,12 +30,10 @@ const Navbar = ({ children }: { children: React.ReactNode }) => {
     };
     return (
         <>
-            <header className="flex flex-wrap container mx-auto max-w-full items-center p-6 justify-between bg-white shadow-md sticky top-0 z-50">
+            <header className="flex flex-wrap container mx-auto max-w-full items-center px-6 justify-between bg-transparent  absolute top-0 z-50">
                 <div className="flex items-center text-blue-900 hover:text-blue-800 cursor-pointer transition duration-150 ">
                     <Link href="/">
-                        <span className="font-semibold text-lg font-sans">
-                            Pecfest&apos;23
-                        </span>
+                        <Image src={"/logo.png"} alt="Pecfest" height={100} width={100}/>
                     </Link>
                 </div>
 
@@ -60,7 +59,7 @@ const Navbar = ({ children }: { children: React.ReactNode }) => {
                                 <>
                                     <li className="my-3 md:my-0 items-center mr-4 md:inline-block block ">
                                         <Link href="/dashboard">
-                                            <p className="text-blue-800 hover:text-blue-900 transition">
+                                            <p className="text-white transition">
                                                 Dashboard
                                             </p>
                                         </Link>
@@ -68,7 +67,7 @@ const Navbar = ({ children }: { children: React.ReactNode }) => {
                                     <li className="my-3 md:my-0 items-center mr-4 md:inline-block block ">
                                         <p
                                             onClick={handleLogout}
-                                            className="text-blue-800 hover:text-blue-900 transition cursor-pointer"
+                                            className="text-white transition cursor-pointer"
                                         >
                                             Logout
                                         </p>
@@ -79,7 +78,6 @@ const Navbar = ({ children }: { children: React.ReactNode }) => {
                     </ul>
                 </nav>
             </header>
-            {children}
         </>
     );
 };
