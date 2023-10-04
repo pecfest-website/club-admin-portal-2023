@@ -1,321 +1,478 @@
-import { RestartAlt } from "@mui/icons-material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import {
   Alert,
-  Box,
   Button,
+  Checkbox,
   Dialog,
-  DialogContent,
-  DialogTitle,
   FormControl,
-  FormHelperText,
-  Grid,
   InputLabel,
   MenuItem,
   Select,
+  SelectChangeEvent,
   Snackbar,
   TextField,
 } from "@mui/material";
-import { DateTimePicker } from "@mui/x-date-pickers";
+import { MobileDateTimePicker } from "@mui/x-date-pickers";
+import dayjs, { Dayjs } from 'dayjs';
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DropzoneArea } from "mui-file-dropzone";
-import React, { useState } from "react";
+import React, { ChangeEvent, useState, useEffect } from "react";
+import CloseIcon from '@mui/icons-material/Close';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import 'dayjs/locale/en-gb';
+import { addDoc, collection } from "firebase/firestore";
+import { db, storage } from "@/serverless/config";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
 type EventDialogPropType = {
   onClose: any;
   open: any;
 }
 
+const ITEM_HEIGHT = 32;
+const ITEM_PADDING_TOP = 6;
+const MenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+      width: 250,
+    },
+  },
+};
+
 const EventDialog = ({ onClose, open }: EventDialogPropType) => {
-  const [eventName, setEventName] = useState();
-  const [eventStart, setEventStart] = useState(
-    new Date(`2023-11-3T00:00:00Z`)
-  );
-  const [eventEnd, setEventEnd] = useState(new Date(`2023-11-5T00:00:00Z`));
-  const [eventVenue, setEventVenue] = useState();
-  const [minTeamSize, setMinTeamSize] = useState();
-  const [maxTeamSize, setMaxTeamSize] = useState();
-  const [rulesLink, setRulesLink] = useState();
-  const [eventPoster, setEventPoster] = useState();
-  const [eventDescription, setEventDescription] = useState();
-  const [eventType, setEventType] = useState(`INDIVIDUAL`);
-  const [eventCategory, setEventCategory] = useState(`CULTURAL`);
-  const [eventCategorySubType, setEventCategorySubType] = useState(`DANCE`);
-  const [pocName, setPocName] = useState();
-  const [pocNumber, setPocNumber] = useState();
-  // work-around for file clear in dropzone
-  const [dropzoneKey, setDropzoneKey] = useState(1);
-  const [imgDimError, setImgDimError] = useState(false);
+  const [formValues, setFormValues] = useState({
+    eventName: "",
+    eventStart: dayjs(),
+    eventEnd: dayjs(),
+    eventType: eventTypes[0],
+    eventCategory: categories[0],
+    eventSubcategory: [] as string[],
+    eventVenue: '',
+    rulesLink: '',
+    eventPoster: {} as object,
+    eventDescription: '',
+    pocName: '',
+    pocNumber: '' as any,
+    dropzoneKey: 1,
+    minTeamSize: 1,
+    maxTeamSize: 1,
+  })
 
+  const [imageDimensionError, setImageDimensionError] = useState(false);
   const [dateError, setDateError] = useState(false);
-  const [eventCreationStatus, setEventCreationStatus] = useState(false);
   const [teamSizeError, setTeamSizeError] = useState();
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [eventCreationStatus, setEventCreationStatus] = useState<string | null>(null);
+  const [eventSubCateg, setEventSubCateg] = useState<string[]>([]);
 
-  const handleEventSubmit = () => {
+  const handleChange = (
+    event:
+      | ChangeEvent<HTMLInputElement>
+      | SelectChangeEvent
+      | React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
+      | File[]
+  ) => {
+    if ('target' in event) {
+      event.preventDefault();
+      const name = event.target.name;
+      const value = event.target.value;
+      setFormValues({
+        ...formValues,
+        [name]: value,
+      });
 
+    } else {
+      const img = document.createElement('img');
+      let is_square = true;
+      if (event && 'length' in event && event[length]) {
+        img.onload = function (event) {
+          if (img.width !== img.height) {
+            is_square = false;
+          }
+
+          if (is_square) {
+            setImageDimensionError(false);
+            setFormValues({
+              ...formValues,
+              eventPoster: (event as any)[0]
+            })
+          } else {
+            setImageDimensionError(true);
+            const prev = formValues.dropzoneKey;
+            setFormValues({
+              ...formValues,
+              dropzoneKey: 1 - prev
+            })
+          }
+        };
+        img.src = URL.createObjectURL(event[0]);
+      }
+    }
   }
 
-  const handleEventChange = (e: any) => {
+  const handleSubcategoryChange = (event: SelectChangeEvent<typeof eventSubCateg>) => {
+    const {
+      target: { value },
+    } = event;
+    setEventSubCateg(
+      // On autofill we get a stringified value.
+      typeof value === 'string' ? value.split(',') : value,
+    );
 
+    setFormValues({
+      ...formValues,
+      eventSubcategory: typeof value === 'string' ? [value] : value
+    })
+  };
+
+  const handleStartDateTimeChange = (newDate: any) => {
+    setFormValues({
+      ...formValues,
+      eventStart: newDate
+    })
   }
 
-
-  const handleSnackbarClose = (e: any) => {
-    setEventCreationStatus(false);
+  const handleEndDateTimeChange = (newDate: any) => {
+    setFormValues({
+      ...formValues,
+      eventEnd: newDate
+    })
   }
+
+  const uploadImage = async () => {
+    const storageRef = ref(storage, `events/${formValues.eventName}`);
+    const result = await uploadBytes(storageRef, formValues.eventPoster as File);
+
+    const downloadUrl = getDownloadURL(storageRef);
+    return downloadUrl;
+  }
+
+  useEffect(() => {
+    if (formValues.eventStart > formValues.eventEnd) {
+      setDateError(true);
+    } else {
+      setDateError(false);
+    }
+  }, [formValues])
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setLoading(true);
+
+    console.log(formValues);
+    /*
+      {
+        "eventName": "asas",
+        "eventStart": null,
+        "eventEnd": "2023-10-19T18:30:00.000Z", Access $d for string
+        "eventType": "Individual",
+        "eventCategory": "Cultural",
+        "eventSubcategory": "Dance",
+        "eventVenue": "212",
+        "rulesLink": "21211",
+        "eventDescription": "21212",
+        "pocName": "121212",
+        "pocNumber": "12121212",
+        "dropzoneKey": 1,
+        "minTeamSize": 1,
+        "maxTeamSize": 1
+      }
+    */
+
+    let eventPosterUrl = '';
+    if (formValues.eventPoster) {
+      eventPosterUrl = await uploadImage();
+    }
+
+    const eventData = {
+      name: formValues.eventName,
+      type: formValues.eventType,
+      category: formValues.eventCategory,
+      description: formValues.eventDescription,
+      startDate: formValues.eventStart.format(),
+      endDate: formValues.eventEnd.format(),
+      venue: formValues.eventVenue,
+      ruleBook: formValues.rulesLink,
+      image: eventPosterUrl,
+      tags: formValues.eventSubcategory,
+      pocName: formValues.pocName,
+      pocNumber: formValues.pocNumber,
+      minTeamSize: formValues.minTeamSize,
+      maxTeamSize: formValues.maxTeamSize,
+    }
+
+    const eventsRef = collection(db, 'events');
+    const docRef = await addDoc(eventsRef, eventData);
+
+    const id = docRef.id;
+    setEventCreationStatus('SUCCESS: Event Creation Successful');
+    setLoading(false);
+    setFormValues(getDefaultFormValue());
+  }
+
+  const handleSnackbarClose = () => {
+    setEventCreationStatus(null);
+  };
 
   return (
-    <Dialog open={open} onClose={onClose}>
-      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-evenly' }}>
-        Add a New Event
-      </DialogTitle>
-      <DialogContent>
-        <Box
-          component="form"
-          sx={{
-            '& .MuiTextField-root': { mt: 1 },
-          }}
-          autoComplete="off"
-          onSubmit={handleEventSubmit}
-        >
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={12}>
+    <Dialog
+      fullWidth={true}
+      maxWidth={'md'}
+      open={open}
+      onClose={onClose}
+      sx={{ padding: "0", margin: "0", backdropFilter: "blur(5px)" }}
+      PaperProps={{ sx: { borderRadius: "10px" } }}
+    >
+
+      <div className="p-4">
+        <form className="" onSubmit={handleSubmit}>
+          {/* Heading */}
+          <div className="flex justify-between font-bold text-2xl pl-2 pr-2 pt-2 border-b-[1px] border-rose-300">
+            <h1 className="w-[95%]"> ADD AN EVENT </h1>
+            <div className="flex justify-center items-center rounded-lg hover:bg-orange-200/100 w-[30px] h-[30px]" onClick={onClose}>
+              <CloseIcon sx={{ color: '#FF5E0E' }} />
+            </div>
+          </div>
+
+          <div className="pt-3 flex flex-col justify-evenly">
+
+            {/* Event Name */}
+            <div className="p-2">
               <TextField
                 name="eventName"
-                required
-                fullWidth
-                id="eventName"
                 label="Event Name"
-                autoFocus
-                onChange={handleEventChange}
-                value={eventName}
-                inputProps={{ maxLength: 50 }}
+                variant="outlined"
+                onChange={handleChange}
+                value={formValues.eventName}
+                fullWidth={true}
+                required={true}
               />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DateTimePicker
-                  label="Event Start Date and Time"
-                  value={eventStart}
-                  onChange={(e: any) => handleEventChange(e)}
-                  // renderInput={(params: any) => (
-                  //   <TextField
-                  //     name="eventStart"
-                  //     required
-                  //     fullWidth
-                  //     {...params}
-                  //   />
-                  // )}
-                />
-                {dateError && (
-                  <FormHelperText>
-                    Event should start before it ends 😐
-                  </FormHelperText>
-                )}
-              </LocalizationProvider>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DateTimePicker
-                  label="Event End Date and Time"
-                  value={eventEnd}
-                  onChange={(e: any) => handleEventChange(e)}
-                  // renderInput={(params: any) => (
-                  //   <TextField name="eventEnd" fullWidth {...params} />
-                  // )}
-                />
-                {dateError && (
-                  <FormHelperText>
-                    Event should end after it starts 😐
-                  </FormHelperText>
-                )}
-              </LocalizationProvider>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <FormControl fullWidth>
-                <InputLabel id="demo-simple-select-label">Type</InputLabel>
-                <Select
-                  labelId="demo-simple-select-label"
-                  id="demo-simple-select"
-                  value={eventType}
-                  label="Type"
-                  name="eventType"
-                  onChange={(e: any) => handleEventChange(e)}
+            </div>
+
+            {/* Event Date and Time */}
+            <div className="grid grid-cols-2 p-2">
+              <div className="pr-1">
+                <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale='en-gb'>
+                  <MobileDateTimePicker
+                    label="Event Start Date and Time"
+                    orientation="landscape"
+                    slotProps={{ textField: { fullWidth: true } }}
+                    onChange={handleStartDateTimeChange}
+                  />
+                </LocalizationProvider>
+              </div>
+
+              <div className="pl-1">
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <MobileDateTimePicker
+                    label="Event End Date and Time"
+                    orientation="landscape"
+                    slotProps={{ textField: { fullWidth: true } }}
+                    onChange={handleEndDateTimeChange}
+                  />
+                </LocalizationProvider>
+              </div>
+            </div>
+
+            {
+              dateError && (
+                <p className="px-2 mt-[-5px] mb-[5px] text-red-500 font-bold text-sm">
+                  <span><ErrorOutlineIcon fontSize="small" /></span> Make sure that event end date time is after event start time!
+                </p>
+              )
+            }
+
+            {/* Event Type, Category and Subcategory dropdown */}
+            <div className="grid grid-rows-1 grid-cols-1 sm:grid-cols-3 gap-3 p-2">
+              <div className="">
+                <FormControl
+                  size="small"
+                  fullWidth
+                  variant="filled"
                 >
-                  <MenuItem value={`INDIVIDUAL`}>Individual</MenuItem>
-                  <MenuItem value={`TEAM`}>Team</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <FormControl fullWidth>
-                <InputLabel id="demo-simple-select-label">Category</InputLabel>
+                  <InputLabel>Type</InputLabel>
+                  <Select
+                    name="eventType"
+                    onChange={handleChange}
+                    value={formValues.eventType}
+                    sx={{ height: "4em" }}
+                  >
+                    {eventTypes.map((eventType, id) => (
+                      <MenuItem value={eventType} key={id}>
+                        {eventType}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </div>
+
+              <FormControl
+                size="small"
+                fullWidth
+                variant="filled"
+              >
+                <InputLabel>Category</InputLabel>
                 <Select
-                  labelId="demo-simple-select-label"
-                  id="demo-simple-select"
-                  value={eventCategory}
-                  label="Category"
                   name="eventCategory"
-                  onChange={handleEventChange}
+                  onChange={handleChange}
+                  value={formValues.eventCategory}
+                  sx={{ height: "4em" }}
                 >
-                  <MenuItem value={`CULTURAL`}>Cultural</MenuItem>
-                  <MenuItem value={`MEGASHOWS`}>Mega Shows</MenuItem>
-                  <MenuItem value={`TECHNICAL`}>Technical</MenuItem>
-                  <MenuItem value={`WORKSHOPS`}>Workshops</MenuItem>
+                  {categories.map((category, id) => (
+                    <MenuItem value={category} key={id}>
+                      {category}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <FormControl fullWidth>
-                <InputLabel id="demo-simple-select-label">
-                  Sub-Category
-                </InputLabel>
+
+              <FormControl
+                size="small"
+                fullWidth
+                variant="filled"
+              >
+                <InputLabel>Sub-category</InputLabel>
                 <Select
-                  labelId="demo-simple-select-label"
-                  id="demo-simple-select"
-                  value={eventCategorySubType}
-                  label="Sub-Category"
-                  name="eventSubCategory"
-                  onChange={handleEventChange}
-                  MenuProps={{ PaperProps: { sx: { maxHeight: 200 } } }}
+                  name="eventSubcategory"
+                  onChange={handleSubcategoryChange}
+                  value={formValues.eventSubcategory}
+                  renderValue={(selected: string[]) => selected.join(', ')}
+                  sx={{ height: "4em" }}
+                  MenuProps={MenuProps}
+                  multiple
                 >
-                  <MenuItem value={`DANCE`}>Dance</MenuItem>
-                  <MenuItem value={`MUSIC`}>Music</MenuItem>
-                  <MenuItem value={`CODING`}>Coding</MenuItem>
-                  <MenuItem value={`HARDWARE`}>Hardware</MenuItem>
-                  <MenuItem value={`ART`}>Art</MenuItem>
-                  <MenuItem value={`PHOTOGRAPHY`}>Photography</MenuItem>
-                  <MenuItem value={`CINEMATOGRAPHY`}>Cinematography</MenuItem>
-                  <MenuItem value={`LITERARY`}>Literary</MenuItem>
-                  <MenuItem value={`QUIZ`}>Quiz</MenuItem>
-                  <MenuItem value={`DRAMATICS`}>Dramatics</MenuItem>
-                  <MenuItem value={`GAMING`}>Gaming</MenuItem>
-                  <MenuItem value={`FUN`}>Fun</MenuItem>
+                  {subCategories.map((subCategory, id) => (
+                    <MenuItem value={subCategory} key={id}>
+                      <Checkbox checked={eventSubCateg.indexOf(subCategory) > -1} />
+                      {subCategory}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
+            </div>
+
+            {/* If Team Competition ask for min and max team size */}
+            {
+              formValues.eventType === eventTypes[1] && (
+                <div className="grid grid-cols-2">
+                  <div className="p-2">
+                    <TextField
+                      name="minTeamSize"
+                      label="Minimum Team Size"
+                      variant="outlined"
+                      onChange={handleChange}
+                      value={formValues.minTeamSize}
+                      fullWidth={true}
+                      required={true}
+                    />
+                  </div>
+
+                  <div className="p-2">
+                    <TextField
+                      name="maxTeamSize"
+                      label="Maximum Team Size"
+                      variant="outlined"
+                      onChange={handleChange}
+                      value={formValues.maxTeamSize}
+                      fullWidth={true}
+                      required={true}
+                    />
+                  </div>
+                </div>
+              )
+            }
+
+            {/* Event Venue and Rulebook */}
+            <div className="p-2">
               <TextField
-                required
                 fullWidth
-                onChange={handleEventChange}
-                label="Event Venue"
                 name="eventVenue"
-                value={eventVenue}
-                inputProps={{ maxLength: 25 }}
+                value={formValues.eventVenue}
+                onChange={handleChange}
+                variant="outlined"
+                label="Event Venue"
               />
-            </Grid>
-            {eventType == `TEAM` && (
-              <Grid item xs={6} sm={3}>
-                <TextField
-                  required
-                  fullWidth
-                  type={'number'}
-                  label="Min Team Size"
-                  onChange={(e: any) => handleEventChange(e)}
-                  name="minTeamSize"
-                  value={minTeamSize}
-                />
-              </Grid>
-            )}
-            {eventType == `TEAM` && (
-              <Grid item xs={6} sm={3}>
-                <TextField
-                  required
-                  fullWidth
-                  type={'number'}
-                  label="Max Team Size"
-                  onChange={(e: any) => handleEventChange(e)}
-                  name="maxTeamSize"
-                  value={maxTeamSize}
-                />
-              </Grid>
-            )}
-            {eventType == `TEAM` && teamSizeError && (
-              <Grid item>
-                <Alert severity="error">
-                  Min Team Size should be less than Max Team Size. 😐
-                </Alert>
-              </Grid>
-            )}
-            <Grid item xs={12} sm={12}>
+            </div>
+            <div className="p-2">
               <TextField
                 fullWidth
-                onChange={(e: any) => handleEventChange(e)}
-                label="Link to the Rulebook"
                 name="rulesLink"
-                value={rulesLink}
+                value={formValues.rulesLink}
+                onChange={handleChange}
+                variant="outlined"
+                label="Link to Rule Book"
               />
-            </Grid>
-            <Grid item xs={12} sm={12}>
+            </div>
+
+            {/* Attach Event Poster (WORKING! SO DIDN'T TOUCH)*/}
+            <div className="p-2">
               <DropzoneArea
+                // name="eventPoster"
                 acceptedFiles={['image/*']}
                 dropzoneText={'Attach Event Poster'}
                 filesLimit={1}
-                fileObjects={undefined}
                 Icon={UploadFileIcon}
                 maxFileSize={204800}
-                onChange={(e:any) => handleEventChange(e)}
-                // name="eventPoster"
                 clearOnUnmount
-                key={dropzoneKey}
+                key={formValues.dropzoneKey}
+                fileObjects={undefined}
+                onChange={handleChange}
               />
-              {imgDimError && (
-                <Alert severity="warning">
-                  Please Upload Posters In A 1:1 Aspect Ratio
-                </Alert>
-              )}
-            </Grid>
-            <Grid item xs={12} sm={12}>
-              <TextField
-                fullWidth
-                multiline
-                label="Event Description"
-                minRows={12}
-                maxRows={12}
-                required
-                onChange={(e: any) => handleEventChange(e)}
-                name="eventDescription"
-                value={eventDescription}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                required
-                fullWidth
-                type={'text'}
-                label="Point of Contact Name"
-                onChange={(e: any) => handleEventChange(e)}
-                name="pocName"
-                value={pocName}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                required
-                fullWidth
-                type={'number'}
-                label="Point of Contact Number"
-                onChange={(e: any) => handleEventChange(e)}
-                name="pocNumber"
-              />
-            </Grid>
-            <Grid item xs={12} sm={12}>
-              <Button fullWidth variant="contained" type="submit">
-                {!isLoading ? (
-                  `Add Event`
-                ) : (
-                  <RestartAlt />
+
+              {
+                imageDimensionError && (
+                  <Alert severity="warning">
+                    Please Upload Posters In A 1:1 Aspect Ratio
+                  </Alert>
                 )}
+            </div>
+
+            <div className="p-2">
+              <TextField
+                name="eventDescription"
+                value={formValues.eventDescription}
+                onChange={handleChange}
+                fullWidth={true}
+                multiline
+                rows={8}
+                variant="outlined"
+                label="Event Description"
+              />
+            </div>
+
+            <div className="grid grid-cols-2">
+              <div className="p-2">
+                <TextField
+                  name="pocName"
+                  value={formValues.pocName}
+                  onChange={handleChange}
+                  fullWidth
+                  label="Point of Contact Name"
+                />
+              </div>
+              <div className="p-2">
+                <TextField
+                  name="pocNumber"
+                  value={formValues.pocNumber}
+                  onChange={handleChange}
+                  fullWidth
+                  label="Point of Contact Number"
+                />
+              </div>
+            </div>
+
+            <div className="w-[120px] m-auto py-2">
+              <Button variant="outlined" fullWidth={false} type='submit' disabled={loading}>
+                {loading ? 'Loading...' : 'ADD EVENT'}
               </Button>
-            </Grid>
-          </Grid>
-        </Box>
-      </DialogContent>
+            </div>
+          </div>
+        </form >
+      </div >
       <Snackbar
-        open={eventCreationStatus}
+        open={eventCreationStatus ? true : false}
         autoHideDuration={6000}
         onClose={handleSnackbarClose}
       >
@@ -327,7 +484,55 @@ const EventDialog = ({ onClose, open }: EventDialogPropType) => {
           {eventCreationStatus}
         </Alert>
       </Snackbar>
-    </Dialog>);
+    </Dialog >
+  );
 };
 
 export default EventDialog;
+
+const eventTypes = [
+  'Individual',
+  'Team'
+]
+
+const categories = [
+  'Cultural',
+  'Mega Shows',
+  'Technical',
+  'Workshops'
+]
+
+const subCategories = [
+  'Dance',
+  'Music',
+  'Coding',
+  'Hardware',
+  'Art',
+  'Photography',
+  'Cinematography',
+  'Literary',
+  'Quiz',
+  'Dramatics',
+  'Gaming',
+  'Fun'
+]
+
+const getDefaultFormValue = () => {
+  return {
+    eventName: "",
+    eventStart: dayjs(),
+    eventEnd: dayjs(),
+    eventType: eventTypes[0],
+    eventCategory: categories[0],
+    eventSubcategory: [] as string[],
+    eventVenue: '',
+    rulesLink: '',
+    eventPoster: {} as object,
+    eventDescription: '',
+    pocName: '',
+    pocNumber: '' as any,
+    dropzoneKey: 1,
+    minTeamSize: 1,
+    maxTeamSize: 1,
+  }
+}
