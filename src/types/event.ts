@@ -9,6 +9,7 @@ export interface Event {
     club: string; // TODO : add all clubs here
     clubType: "CULTURAL" | "TECHINCAL";
     ruleBook: string;
+    image: string;
     tags: Array<
         | "DANCE"
         | "MUSIC"
