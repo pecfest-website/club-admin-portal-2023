@@ -1,21 +1,141 @@
+import Layout from "@/components/Layout";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import {
+    Box,
+    Button,
+    Container,
+    CssBaseline,
+    Grid,
+    Typography,
+} from "@mui/material";
+import AddBoxOutlinedIcon from "@mui/icons-material/AddBoxOutlined";
 import Head from "next/head";
+import { useState } from "react";
+import EventDialog from "@/components/events/EventDialog";
 
 const DashboardPage = () => {
+
+    const [currentUser, setCurrentUser] = useState();
+    const [currentToken, setCurrentToken] = useState();
+    // const { data: session } = useSession();
+    // useEffect(() => {
+    //   const { data } = getCookieData(session);
+    //   if (data) {
+    //     setCurrentUser(() => data.user);
+    //     setCurrentToken(() => data.token);
+    //   }
+    // }, []);
+  
+    const [eventDialogOpen, setEventDialogOpen] = useState(false);
+    // const event_list = props.evts;
+  
+    const handleAddEventOpen = () => {
+      setEventDialogOpen(true);
+    };
+  
+    const handleAddEventClose = () => {
+      setEventDialogOpen(false);
+    };
+
     return (
         <ProtectedRoute>
-            <Head>
-                <title>Admin Panel | PECFEST&apos;23</title>
-            </Head>
-            <div className="flex py-2 container mx-auto">
-                <div className="text-gray-600 px-12 py-24 mt-24 overflow-y-hidden mx-auto">
-                    <h2 className="text-2xl font-semibold">
-                        You are logged in!
-                    </h2>
+            <Layout>
+                <Head>
+                    <title>Admin Panel | PECFEST&apos;23</title>
+                </Head>
+                <div className="flex py-2  h-full w-full bg-[url('/bg2.png')] bg-cover bg-opacity-60">
+                    <Container component={`main`}>
+                        <CssBaseline />
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                flexWrap: "wrap",
+                                gap: "1em",
+                                margin: "auto",
+                                marginTop: 8,
+                            }}
+                        >
+                            <Typography
+                                sx={{ width: `100%`, textAlign: `center` }}
+                                variant={`h5`}
+                                className={'text-white text-lg font-bold text-center'}
+                            >
+                                Events by:{" "}
+                                {/* {currentUser && currentUser.first_name} */}
+                            </Typography>
+                            <Button
+                                sx={{
+                                    display: "flex",
+                                    gap: "1em",
+                                    alignItems: "center",
+                                }}
+                                variant={`contained`}
+                                onClick={handleAddEventOpen}
+                            >
+                                Add an Event <AddBoxOutlinedIcon />
+                            </Button>
+                            <EventDialog
+                                open={eventDialogOpen}
+                                onClose={handleAddEventClose}
+                                user_token={currentToken}
+                            />
+                        </Box>
+                        <Grid
+                            sx={{
+                                mt: 8,
+                                justifyContent: "center",
+                                gap: "2em",
+                                mb: 4,
+                                width: 'full'
+                            }}
+                            container
+                        >
+                            {/* {event_list &&
+                                event_list.map((curr_event, idx) => (
+                                    <div key={idx}>
+                                        <EventCard
+                                            event_name={curr_event.name}
+                                            id={idx}
+                                            image={curr_event.image_url}
+                                            event_id={curr_event.id}
+                                            token={currentToken}
+                                            type={curr_event.type}
+                                        />
+                                    </div>
+                                ))} */}
+                        </Grid>
+                    </Container>
                 </div>
-            </div>
+            </Layout>
         </ProtectedRoute>
     );
 };
 
 export default DashboardPage;
+
+// export async function getServerSideProps(context) {
+//     const { data } = getServerCookieData(context);
+//     if (data == null || data.user == null || data.user.is_staff == false) {
+//       return {
+//         redirect: {
+//           permanent: false,
+//           destination: '/',
+//         },
+//       };
+//     }
+//     const { token } = data;
+//     const events = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}club/`, {
+//       method: `GET`,
+//       headers: {
+//         Authorization: `Token ${token}`,
+//       },
+//     }).then((res) => res.json());
+  
+//     return {
+//       props: {
+//         evts: events,
+//       },
+//     };
+//   }
