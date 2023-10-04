@@ -12,11 +12,12 @@ import AddBoxOutlinedIcon from "@mui/icons-material/AddBoxOutlined";
 import Head from "next/head";
 import { useState } from "react";
 import EventDialog from "@/components/events/EventDialog";
+import { useAuth } from "@/context/AuthContext";
 
 const DashboardPage = () => {
-
     const [currentUser, setCurrentUser] = useState();
     const [currentToken, setCurrentToken] = useState();
+    const { user } = useAuth();
     // const { data: session } = useSession();
     // useEffect(() => {
     //   const { data } = getCookieData(session);
@@ -25,16 +26,16 @@ const DashboardPage = () => {
     //     setCurrentToken(() => data.token);
     //   }
     // }, []);
-  
+
     const [eventDialogOpen, setEventDialogOpen] = useState(false);
     // const event_list = props.evts;
-  
+
     const handleAddEventOpen = () => {
-      setEventDialogOpen(true);
+        setEventDialogOpen(true);
     };
-  
+
     const handleAddEventClose = () => {
-      setEventDialogOpen(false);
+        setEventDialogOpen(false);
     };
 
     return (
@@ -60,9 +61,11 @@ const DashboardPage = () => {
                             <Typography
                                 sx={{ width: `100%`, textAlign: `center` }}
                                 variant={`h5`}
-                                className={'text-white text-lg font-bold text-center'}
+                                className={
+                                    "text-white text-lg font-bold text-center"
+                                }
                             >
-                                Events by:{" "}
+                                Events by: {user?.email}
                                 {/* {currentUser && currentUser.first_name} */}
                             </Typography>
                             <Button
@@ -88,7 +91,7 @@ const DashboardPage = () => {
                                 justifyContent: "center",
                                 gap: "2em",
                                 mb: 4,
-                                width: 'full'
+                                width: "full",
                             }}
                             container
                         >
@@ -114,28 +117,3 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
-
-// export async function getServerSideProps(context) {
-//     const { data } = getServerCookieData(context);
-//     if (data == null || data.user == null || data.user.is_staff == false) {
-//       return {
-//         redirect: {
-//           permanent: false,
-//           destination: '/',
-//         },
-//       };
-//     }
-//     const { token } = data;
-//     const events = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}club/`, {
-//       method: `GET`,
-//       headers: {
-//         Authorization: `Token ${token}`,
-//       },
-//     }).then((res) => res.json());
-  
-//     return {
-//       props: {
-//         evts: events,
-//       },
-//     };
-//   }
