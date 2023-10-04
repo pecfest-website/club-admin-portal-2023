@@ -1,4 +1,5 @@
 export interface Event {
+    id: string;
     name: string;
     type: "INDIVIDUAL" | "TEAM";
     category: "TECHNICAL" | "CULTURAL" | "MEGASHOWS" | "WORKSHOP";

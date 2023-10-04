@@ -12,29 +12,29 @@ import AddBoxOutlinedIcon from "@mui/icons-material/AddBoxOutlined";
 import Head from "next/head";
 import { useState } from "react";
 import EventDialog from "@/components/events/EventDialog";
+import { useAuth } from "@/context/AuthContext";
+import { Event } from "@/types/event";
+import EventCard from "@/components/events/EventCard";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/serverless/config";
 
-const DashboardPage = () => {
+interface DashboardPageProps {
+    events: Event[];
+}
+const DashboardPage = (props: DashboardPageProps) => {
+    const { user } = useAuth();
 
-    const [currentUser, setCurrentUser] = useState();
-    const [currentToken, setCurrentToken] = useState();
-    // const { data: session } = useSession();
-    // useEffect(() => {
-    //   const { data } = getCookieData(session);
-    //   if (data) {
-    //     setCurrentUser(() => data.user);
-    //     setCurrentToken(() => data.token);
-    //   }
-    // }, []);
-  
     const [eventDialogOpen, setEventDialogOpen] = useState(false);
-    // const event_list = props.evts;
-  
+    const event_list = props.events;
+
+    console.log(event_list)
+
     const handleAddEventOpen = () => {
-      setEventDialogOpen(true);
+        setEventDialogOpen(true);
     };
-  
+
     const handleAddEventClose = () => {
-      setEventDialogOpen(false);
+        setEventDialogOpen(false);
     };
 
     return (
@@ -43,7 +43,7 @@ const DashboardPage = () => {
                 <Head>
                     <title>Admin Panel | PECFEST&apos;23</title>
                 </Head>
-                <div className="flex py-2  h-full w-full bg-[url('/bg2.png')] bg-cover bg-opacity-60">
+                <div className="flex py-2  h-full w-full  bg-cover bg-opacity-60 bg-[url('/bg2.png')]">
                     <Container component={`main`}>
                         <CssBaseline />
                         <Box
@@ -58,12 +58,18 @@ const DashboardPage = () => {
                             }}
                         >
                             <Typography
-                                sx={{ width: `100%`, textAlign: `center` }}
+                                sx={{
+                                    width: `100%`,
+                                    textAlign: `center`,
+                                    fontFamily: "serif",
+                                    fontWeight: 800,
+                                }}
                                 variant={`h5`}
-                                className={'text-white text-lg font-bold text-center'}
+                                className={
+                                    "text-white text-lg font-extrabold font-sans drop-shadow-xl glassmorphism py-2 rounded-xl"
+                                }
                             >
-                                Events by:{" "}
-                                {/* {currentUser && currentUser.first_name} */}
+                                Events by: {user && user.email}
                             </Typography>
                             <Button
                                 sx={{
@@ -79,7 +85,6 @@ const DashboardPage = () => {
                             <EventDialog
                                 open={eventDialogOpen}
                                 onClose={handleAddEventClose}
-                                user_token={currentToken}
                             />
                         </Box>
                         <Grid
@@ -88,23 +93,22 @@ const DashboardPage = () => {
                                 justifyContent: "center",
                                 gap: "2em",
                                 mb: 4,
-                                width: 'full'
+                                width: "full",
                             }}
                             container
                         >
-                            {/* {event_list &&
+                            {event_list &&
                                 event_list.map((curr_event, idx) => (
                                     <div key={idx}>
                                         <EventCard
                                             event_name={curr_event.name}
                                             id={idx}
-                                            image={curr_event.image_url}
+                                            image={curr_event.image}
                                             event_id={curr_event.id}
-                                            token={currentToken}
                                             type={curr_event.type}
                                         />
                                     </div>
-                                ))} */}
+                                ))}
                         </Grid>
                     </Container>
                 </div>
@@ -115,27 +119,22 @@ const DashboardPage = () => {
 
 export default DashboardPage;
 
-// export async function getServerSideProps(context) {
-//     const { data } = getServerCookieData(context);
-//     if (data == null || data.user == null || data.user.is_staff == false) {
-//       return {
-//         redirect: {
-//           permanent: false,
-//           destination: '/',
-//         },
-//       };
-//     }
-//     const { token } = data;
-//     const events = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}club/`, {
-//       method: `GET`,
-//       headers: {
-//         Authorization: `Token ${token}`,
-//       },
-//     }).then((res) => res.json());
-  
-//     return {
-//       props: {
-//         evts: events,
-//       },
-//     };
-//   }
+export async function getServerSideProps(context: any) {
+    const eventsRef = collection(db, "events");
+    const eventsSnapshot = await getDocs(eventsRef);
+
+    let events: Event[] = [];
+
+    eventsSnapshot.docs.map((doc) => {
+        const e = {
+            id: doc.id,
+            ...doc.data(),
+        };
+        events.push(e as Event);
+    });
+    return {
+        props: {
+            events,
+        },
+    };
+}

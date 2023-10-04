@@ -30,8 +30,8 @@ const Navbar = () => {
     };
     return (
         <>
-            <header className="flex flex-wrap container mx-auto max-w-full items-center px-6 justify-between bg-transparent  absolute top-0 z-50">
-                <div className="flex items-center text-blue-900 hover:text-blue-800 cursor-pointer transition duration-150 ">
+            <header className="flex flex-wrap container mx-auto max-w-full items-center px-6 justify-between bg-transparent absolute top-0 z-50">
+                <div className="flex items-center text-white hover:text-orange-400 cursor-pointer transition duration-150 ">
                     <Link href="/">
                         <Image src={"/logo.png"} alt="Pecfest" height={100} width={100}/>
                     </Link>
@@ -49,7 +49,7 @@ const Navbar = () => {
                                         className="my-3 md:my-0 items-center mr-4 md:inline-block block "
                                     >
                                         <Link href={item?.link}>
-                                            <p className="text-blue-800 hover:text-blue-900 transition">
+                                            <p className="text-orange-400 hover:text-blue-800 transition">
                                                 {item?.name}
                                             </p>
                                         </Link>

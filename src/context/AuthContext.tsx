@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import {
+    UserCredential,
     onAuthStateChanged,
     signInWithEmailAndPassword,
     signOut,
@@ -11,9 +12,21 @@ interface UserType {
     uid: string | null;
 }
 
-const AuthContext = createContext({});
+interface ContextType {
+    user: UserType | null;
+    logIn:
+        | ((email: string, password: string) => Promise<UserCredential>)
+        | null;
+    logOut: (() => Promise<void>) | null;
+}
 
-export const useAuth = () => useContext<any>(AuthContext);
+const AuthContext = createContext<ContextType>({
+    user: null,
+    logIn: null,
+    logOut: null,
+});
+
+export const useAuth = () => useContext<ContextType>(AuthContext);
 
 export const AuthContextProvider = ({
     children,
