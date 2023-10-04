@@ -7,7 +7,6 @@ import { getSession, signIn } from "next-auth/react";
 const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
-    const router = useRouter();
     return (
         <Layout>
             <div

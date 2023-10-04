@@ -13,9 +13,9 @@ import { useState } from "react";
 import EventDialog from "@/components/events/EventDialog";
 import { Event } from "@/types/event";
 import EventCard from "@/components/events/EventCard";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import { db } from "@/serverless/config";
-import { useSession } from "next-auth/react";
+import { getSession, useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 
 interface DashboardPageProps {
@@ -32,8 +32,6 @@ const DashboardPage = (props: DashboardPageProps) => {
     const [eventDialogOpen, setEventDialogOpen] = useState(false);
     const event_list = props.events;
 
-    console.log(event_list);
-
     const handleAddEventOpen = () => {
         setEventDialogOpen(true);
     };
@@ -47,15 +45,20 @@ const DashboardPage = (props: DashboardPageProps) => {
             <Head>
                 <title>Admin Panel | PECFEST&apos;23</title>
             </Head>
-            <div className="flex py-2  h-full w-full  bg-cover bg-opacity-60 bg-[url('/bg2.png')]">
-                <Container component={`main`}>
+            <div className="flex h-full w-full bg-cover bg-[url('/bg2.png')] items-center justify-center">
+                <Container
+                    component={`main`}
+                    className="h-full w-full p-4 m-0 scrollbar-hide overflow-y-scroll"
+                >
                     <CssBaseline />
                     <Box
+                        component={"div"}
+                        className="space-y-2 w-full"
                         sx={{
                             display: "flex",
                             alignItems: "center",
+                            flexDirection: "column",
                             justifyContent: "center",
-                            flexWrap: "wrap",
                             gap: "1em",
                             margin: "auto",
                             marginTop: 8,
@@ -88,10 +91,11 @@ const DashboardPage = (props: DashboardPageProps) => {
                         </Button>
                         <EventDialog
                             open={eventDialogOpen}
+                            setOpen={setEventDialogOpen}
                             onClose={handleAddEventClose}
                         />
                     </Box>
-                    <div className="scrollbar-hide overflow-y-scroll h-full w-full py-6">
+                    <div className="w-full">
                         <Grid
                             sx={{
                                 mt: 8,
@@ -125,7 +129,21 @@ const DashboardPage = (props: DashboardPageProps) => {
 export default DashboardPage;
 
 export async function getServerSideProps(context: any) {
-    const eventsRef = collection(db, "events");
+    const { req } = context;
+    const session = await getSession({ req });
+    if (session == null) {
+        return {
+            redirect: {
+                destination: "/",
+                permanent: true,
+            },
+        };
+    }
+    const email = session.user?.email;
+    const eventsRef = query(
+        collection(db, "events"),
+        where("adminEmail", "==", email)
+    );
     const eventsSnapshot = await getDocs(eventsRef);
 
     let events: Event[] = [];
