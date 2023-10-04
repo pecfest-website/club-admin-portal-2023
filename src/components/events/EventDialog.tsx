@@ -46,7 +46,7 @@ const EventDialog = ({ onClose, open, user_token }: EventDialogPropType) => {
   const [pocName, setPocName] = useState();
   const [pocNumber, setPocNumber] = useState();
   // work-around for file clear in dropzone
-  const [dropzoneKey, setDropzoneKey] = useState(true);
+  const [dropzoneKey, setDropzoneKey] = useState(1);
   const [imgDimError, setImgDimError] = useState(false);
 
   const [dateError, setDateError] = useState(false);
@@ -58,9 +58,10 @@ const EventDialog = ({ onClose, open, user_token }: EventDialogPropType) => {
 
   }
 
-  const handleEventChange = (e: any, type: number = 0) => {
+  const handleEventChange = (e: any) => {
 
   }
+
 
   const handleSnackbarClose = (e: any) => {
     setEventCreationStatus(false);
@@ -99,7 +100,7 @@ const EventDialog = ({ onClose, open, user_token }: EventDialogPropType) => {
                 <DateTimePicker
                   label="Event Start Date and Time"
                   value={eventStart}
-                  onChange={(e: any) => handleEventChange(e, 0)}
+                  onChange={(e: any) => handleEventChange(e)}
                   // renderInput={(params: any) => (
                   //   <TextField
                   //     name="eventStart"
@@ -121,10 +122,10 @@ const EventDialog = ({ onClose, open, user_token }: EventDialogPropType) => {
                 <DateTimePicker
                   label="Event End Date and Time"
                   value={eventEnd}
-                  onChange={(e: any) => handleEventChange(e, 1)}
-                  renderInput={(params: any) => (
-                    <TextField name="eventEnd" fullWidth {...params} />
-                  )}
+                  onChange={(e: any) => handleEventChange(e)}
+                  // renderInput={(params: any) => (
+                  //   <TextField name="eventEnd" fullWidth {...params} />
+                  // )}
                 />
                 {dateError && (
                   <FormHelperText>
@@ -254,10 +255,11 @@ const EventDialog = ({ onClose, open, user_token }: EventDialogPropType) => {
                 acceptedFiles={['image/*']}
                 dropzoneText={'Attach Event Poster'}
                 filesLimit={1}
+                fileObjects={undefined}
                 Icon={UploadFileIcon}
                 maxFileSize={204800}
                 onChange={(e:any) => handleEventChange(e)}
-                name="eventPoster"
+                // name="eventPoster"
                 clearOnUnmount
                 key={dropzoneKey}
               />
