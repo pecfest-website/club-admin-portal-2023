@@ -25,10 +25,9 @@ import React, { useState } from "react";
 type EventDialogPropType = {
   onClose: any;
   open: any;
-  user_token: any;
 }
 
-const EventDialog = ({ onClose, open, user_token }: EventDialogPropType) => {
+const EventDialog = ({ onClose, open }: EventDialogPropType) => {
   const [eventName, setEventName] = useState();
   const [eventStart, setEventStart] = useState(
     new Date(`2023-11-3T00:00:00Z`)
