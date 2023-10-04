@@ -26,7 +26,7 @@ const AuthContext = createContext<ContextType>({
     logOut: null,
 });
 
-export const useAuth = () => useContext<ContextType>(AuthContext);
+export const useAuth = () => useContext<any>(AuthContext);
 
 export const AuthContextProvider = ({
     children,

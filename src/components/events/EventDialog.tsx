@@ -22,12 +22,12 @@ import CloseIcon from '@mui/icons-material/Close';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import 'dayjs/locale/en-gb';
 import { addDoc, collection } from "firebase/firestore";
-import { db } from "@/serverless/config";
+import { db, storage } from "@/serverless/config";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
 type EventDialogPropType = {
   onClose: any;
   open: any;
-  user_token: any;
 }
 
 const ITEM_HEIGHT = 32;
@@ -41,7 +41,7 @@ const MenuProps = {
   },
 };
 
-const EventDialog = ({ onClose, open, user_token }: EventDialogPropType) => {
+const EventDialog = ({ onClose, open }: EventDialogPropType) => {
   const [formValues, setFormValues] = useState({
     eventName: "",
     eventStart: dayjs(),
@@ -141,6 +141,14 @@ const EventDialog = ({ onClose, open, user_token }: EventDialogPropType) => {
     })
   }
 
+  const uploadImage = async () => {
+    const storageRef = ref(storage, `events/${formValues.eventName}`);
+    const result = await uploadBytes(storageRef, formValues.eventPoster as File);
+
+    const downloadUrl = getDownloadURL(storageRef);
+    return downloadUrl;
+  }
+
   useEffect(() => {
     if (formValues.eventStart > formValues.eventEnd) {
       setDateError(true);
@@ -173,6 +181,11 @@ const EventDialog = ({ onClose, open, user_token }: EventDialogPropType) => {
       }
     */
 
+    let eventPosterUrl = '';
+    if (formValues.eventPoster) {
+      eventPosterUrl = await uploadImage();
+    }
+
     const eventData = {
       name: formValues.eventName,
       type: formValues.eventType,
@@ -182,7 +195,7 @@ const EventDialog = ({ onClose, open, user_token }: EventDialogPropType) => {
       endDate: formValues.eventEnd.format(),
       venue: formValues.eventVenue,
       ruleBook: formValues.rulesLink,
-      image: '', // TODO
+      image: eventPosterUrl,
       tags: formValues.eventSubcategory,
       pocName: formValues.pocName,
       pocNumber: formValues.pocNumber,
