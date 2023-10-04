@@ -21,7 +21,7 @@ export default function Home() {
     return (
         <Layout>
             <div
-                className={`flex flex-col items-center justify-center p-24 ${inter.className} h-full w-full bg-[url('/bg1.png')] bg-cover bg-opacity-60`}
+                className={`flex flex-col items-center justify-center p-24 ${inter.className} h-full w-full bg-[url('/bg1.png')] bg-cover bg-opacity-60 bg-center`}
             >
                 <Head>
                     <title>Admin | PECFEST&apos;23</title>
