@@ -1,27 +1,30 @@
 export interface Event {
+    adminEmail: string;
     id: string;
     name: string;
-    type: "INDIVIDUAL" | "TEAM";
-    category: "TECHNICAL" | "CULTURAL" | "MEGASHOWS" | "WORKSHOP";
+    type: "Individual" | "Team";
+    category: "Tehnical" | "Cultural" | "Mega shows" | "Workshops";
     description: string;
-    startDate: Date;
-    endDate: Date;
+    startDate: string;
+    endDate: string;
     venue: string;
-    club: string; // TODO : add all clubs here
-    clubType: "CULTURAL" | "TECHINCAL";
     ruleBook: string;
     image: string;
     tags: Array<
-        | "DANCE"
-        | "MUSIC"
-        | "CODING"
-        | "HARDWARE"
-        | "ART"
-        | "PHOTOGRAPHY"
-        | "CINEMATOGRAPHY"
-        | "LITERARY"
-        | "QUIZ"
-        | "DRAMATICS"
-        | "GAMING"
+        | "Dance"
+        | "Music"
+        | "Coding"
+        | "Hardware"
+        | "Art"
+        | "Photography"
+        | "Cinematography"
+        | "Literary"
+        | "Quiz"
+        | "Dramatics"
+        | "Gaming"
     >;
+    minTeamSize: number;
+    maxTeamSize: number;
+    pocName: string;
+    pocNumber: string;
 }

@@ -225,7 +225,7 @@ const EventDialog = ({ onClose, open, setOpen }: EventDialogPropType) => {
                     <div className="flex justify-between font-bold text-2xl pl-2 pr-2 pt-2 border-b-[1px] border-rose-300">
                         <h1 className="w-[95%]"> ADD AN EVENT </h1>
                         <div
-                            className="flex justify-center items-center rounded-lg hover:bg-orange-200/100 w-[30px] h-[30px]"
+                            className="flex justify-center items-center rounded-lg hover:bg-orange-200/100 w-[30px] h-[30px] hover:cursor-pointer"
                             onClick={onClose}
                         >
                             <CloseIcon sx={{ color: "#FF5E0E" }} />
