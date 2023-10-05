@@ -3,12 +3,14 @@ import Navbar from '@/components/Navbar';
 import EditEventDialog from '@/components/events/EditEventDiaglog';
 import { db } from '@/serverless/config';
 import { Event } from '@/types/event';
-import { Button } from '@mui/material';
+import { Button, CardActions } from '@mui/material';
 import { doc, getDoc } from 'firebase/firestore';
 import Image from 'next/image';
 import { useRouter } from 'next/router'
 import React, { useState } from 'react'
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
+import Head from 'next/head';
+
 
 const badge = (text: string, key: number) => {
   return <span key={key} className="py-1 px-3 align-middle text-white bg-blue-700 text-xs font-medium mr-2 rounded-full">{text}</span>
@@ -63,21 +65,17 @@ function Index({ event }: Props) {
       eventSubcategory: tags,
       eventVenue: venue,
       rulesLink: ruleBookLink,
-      eventPoster: new File([new Blob()], "image.png", {type:"image/png"}),
       eventDescription: description,
       pocName: pocName,
       pocNumber: pocNumber,
       dropzoneKey: 1,
       minTeamSize: minTeamSize,
       maxTeamSize: maxTeamSize,
+      eventPoster: undefined,
     }
   }
 
   const formValues = eventDefaultValue();
-
-  const handleEditEventClick = (event: any) => {
-    console.log('updated form Values', formValues)
-  }
 
   return (
     <Layout>
@@ -88,8 +86,13 @@ function Index({ event }: Props) {
           open={eventDialogOpen}
           setOpen={handleAddEventOpen}
           defaultEventValue={formValues}
+          eventId={eventId as string}
         />
       }
+
+      <Head>
+        <title>{`${heading} | PECFEST'23`}</title>
+      </Head>
       <div className="h-full bg-[url('/bg1.png')] w-full bg-cover h-screen overflow-hidden scrollbar-hide">
         <div className="w-[80vw] mx-auto my-40 grid grid-cols-5 justify-items-center items-center p-5 glassmorphism text-white">
           <div className='col-span-2'>
@@ -158,18 +161,18 @@ function Index({ event }: Props) {
               </div>
             </div>
 
-            <Button
-              onClick={handleAddEventOpen}
-              variant="contained"
-              sx={{ mt: 5, width: '150px', mx: 'auto' }}
-            >
-              Edit Event
-            </Button>
+            <CardActions sx={{ justifyContent: 'center' }}>
+              <button
+                onClick={handleAddEventOpen}
+                className='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800'
+              >
+                Edit Event
+              </button>
+            </CardActions>
           </div>
         </div>
       </div>
     </Layout>
-
   )
 }
 
@@ -194,6 +197,22 @@ export async function getServerSideProps(context: any) {
   }
 }
 
-const getDateTimeString = (date: string) => {
-  return `${new Date(date).toLocaleDateString()} ${new Date(date).toLocaleTimeString()}`
+const get = (dateObj: Dayjs, key: string) => {
+  return dateObj[key as keyof typeof dateObj];
+}
+
+const getDateTimeString = (dateString: string) => {
+  const dateObj = dayjs(dateString);
+  console.log(dateObj)
+  const date = get(dateObj, '$D');
+  const month = get(dateObj, '$M');
+  const year = get(dateObj, '$y');
+
+  let hour = get(dateObj, '$H').toString();
+  let minute = get(dateObj, '$m').toString();
+
+  if (hour.length === 1) hour = '0' + hour;
+  if (minute.length === 1) minute = '0' + minute;
+
+  return `${date}/${month}/${year} ${hour}:${minute}`;
 }

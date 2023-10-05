@@ -267,6 +267,7 @@ const EventDialog = ({ onClose, open, setOpen }: EventDialogPropType) => {
                             <div className="pl-1">
                                 <LocalizationProvider
                                     dateAdapter={AdapterDayjs}
+                                    adapterLocale="en-gb"
                                 >
                                     <MobileDateTimePicker
                                         label="Event End Date and Time"

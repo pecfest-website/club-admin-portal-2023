@@ -315,7 +315,7 @@ const EventCard = ({ id, image, event_name, event_id, type }: any) => {
                     </div>
                 )}
             </Dialog>
-            <Card variant="outlined" sx={{background: 'transparent'}} className="glassmorphism">
+            <Card variant="outlined" sx={{background: 'transparent'}} className="">
                 <CardContent>
                     <CardHeader
                         titleTypographyProps={{
@@ -340,22 +340,10 @@ const EventCard = ({ id, image, event_name, event_id, type }: any) => {
                     />
                 </CardContent>
                 <CardActions sx={{ justifyContent: "center" }}>
-                    <Button
-                        variant="contained"
-                        size="small"
-                        id={id}
-                        onClick={openEditEvent}
-                    >
-                        Edit Event
-                    </Button>
-                    <Button
-                        variant="contained"
-                        name={`${event_id}`}
-                        size="small"
-                        onClick={openEvent}
-                    >
+                    <button onClick={openEvent} className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
                         View Event
-                    </Button>
+                    </button>
+                    
                     <Tooltip title="View Participants">
                         <PeopleAlt
                             onClick={openUserModal}

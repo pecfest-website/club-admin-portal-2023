@@ -19,7 +19,7 @@ import React, { ChangeEvent, useState, useEffect } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import "dayjs/locale/en-gb";
-import { addDoc, collection } from "firebase/firestore";
+import { addDoc, collection, doc, setDoc } from "firebase/firestore";
 import { db, storage } from "@/serverless/config";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useRouter } from "next/router";
@@ -29,6 +29,7 @@ type EventDialogPropType = {
     onClose: any;
     open: any;
     setOpen: any;
+    eventId: string;
     defaultEventValue: {
         eventName: string;
         eventStart: Dayjs;
@@ -50,7 +51,7 @@ type EventDialogPropType = {
         >;
         eventVenue: string;
         rulesLink: string;
-        eventPoster: File;
+        eventPoster: File | undefined;
         eventDescription: string;
         pocName: string;
         pocNumber: string;
@@ -71,7 +72,7 @@ const MenuProps = {
     },
 };
 
-const EditEventDialog = ({ onClose, open, setOpen, defaultEventValue }: EventDialogPropType) => {
+const EditEventDialog = ({ onClose, open, setOpen, defaultEventValue, eventId }: EventDialogPropType) => {
     const router = useRouter();
     const { data: session } = useSession();
 
@@ -161,15 +162,6 @@ const EditEventDialog = ({ onClose, open, setOpen, defaultEventValue }: EventDia
         });
     };
 
-    const uploadImage = async () => {
-        const storageRef = ref(storage, `events/${formValues.eventName}.png`);
-        await uploadBytes(storageRef, formValues.eventPoster, {
-            contentType: "image/png",
-        });
-        const downloadUrl = await getDownloadURL(storageRef);
-        return downloadUrl;
-    };
-
     useEffect(() => {
         if (formValues.eventStart > formValues.eventEnd) {
             setDateError(true);
@@ -182,12 +174,6 @@ const EditEventDialog = ({ onClose, open, setOpen, defaultEventValue }: EventDia
         event.preventDefault();
         setLoading(true);
 
-        let eventPosterUrl = "";
-        if (formValues.eventPoster) {
-            console.log(formValues.eventPoster);
-            eventPosterUrl = await uploadImage();
-        }
-
         const eventData = {
             name: formValues.eventName,
             type: formValues.eventType,
@@ -197,7 +183,6 @@ const EditEventDialog = ({ onClose, open, setOpen, defaultEventValue }: EventDia
             endDate: formValues.eventEnd.format(),
             venue: formValues.eventVenue,
             ruleBook: formValues.rulesLink,
-            image: eventPosterUrl,
             tags: formValues.eventSubcategory,
             pocName: formValues.pocName,
             pocNumber: formValues.pocNumber,
@@ -206,14 +191,17 @@ const EditEventDialog = ({ onClose, open, setOpen, defaultEventValue }: EventDia
             adminEmail: session?.user?.email,
         };
 
-        const eventsRef = collection(db, "events");
-        const docRef = await addDoc(eventsRef, eventData);
+        const docRef = doc(db, `events/${eventId}`);
+        await setDoc(docRef, {
+            ...eventData
+        }, {merge: true})
 
-        const id = docRef.id;
         setEventCreationStatus("SUCCESS: Event Edited Successfully");
         setLoading(false);
         setFormValues(defaultEventValue);
-        router.push(`/events/${id}`);
+        onClose();
+
+        router.reload();
     };
 
     const handleSnackbarClose = () => {
@@ -278,6 +266,7 @@ const EditEventDialog = ({ onClose, open, setOpen, defaultEventValue }: EventDia
                             <div className="pl-1">
                                 <LocalizationProvider
                                     dateAdapter={AdapterDayjs}
+                                    adapterLocale="en-gb"
                                 >
                                     <MobileDateTimePicker
                                         label="Event End Date and Time"
@@ -431,28 +420,6 @@ const EditEventDialog = ({ onClose, open, setOpen, defaultEventValue }: EventDia
                                 label="Link to Rule Book"
                             />
                         </div>
-
-                        {/* Attach Event Poster (WORKING! SO DIDN'T TOUCH)*/}
-                        {/* <div className="p-2">
-                            <DropzoneArea
-                                // name="eventPoster"
-                                acceptedFiles={["image/png"]}
-                                dropzoneText={"Attach Event Poster"}
-                                filesLimit={1}
-                                Icon={UploadFileIcon}
-                                maxFileSize={204800}
-                                clearOnUnmount
-                                key={formValues.dropzoneKey}
-                                fileObjects={undefined}
-                                onChange={handleChange}
-                            />
-
-                            {imageDimensionError && (
-                                <Alert severity="warning">
-                                    Please Upload Posters In A 1:1 Aspect Ratio
-                                </Alert>
-                            )}
-                        </div> */}
 
                         <div className="p-2">
                             <TextField
