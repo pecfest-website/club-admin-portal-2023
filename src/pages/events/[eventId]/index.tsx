@@ -1,11 +1,14 @@
 import Layout from '@/components/Layout';
 import Navbar from '@/components/Navbar';
+import EditEventDialog from '@/components/events/EditEventDiaglog';
 import { db } from '@/serverless/config';
 import { Event } from '@/types/event';
+import { Button } from '@mui/material';
 import { doc, getDoc } from 'firebase/firestore';
 import Image from 'next/image';
 import { useRouter } from 'next/router'
-import React from 'react'
+import React, { useState } from 'react'
+import dayjs from 'dayjs';
 
 const badge = (text: string, key: number) => {
   return <span key={key} className="py-1 px-3 align-middle text-white bg-blue-700 text-xs font-medium mr-2 rounded-full">{text}</span>
@@ -24,6 +27,15 @@ interface Props {
 }
 
 function Index({ event }: Props) {
+  const [eventDialogOpen, setEventDialogOpen] = useState<boolean>(false);
+  const handleAddEventOpen = () => {
+    setEventDialogOpen(true);
+  };
+
+  const handleAddEventClose = () => {
+    setEventDialogOpen(false);
+  };
+
   const router = useRouter()
   const { eventId } = router.query;
   const heading = event.name;
@@ -41,10 +53,45 @@ function Index({ event }: Props) {
   const image = event.image;
   const titleClass = 'mb-2 text-md font-medium text-white';
 
+  const eventDefaultValue = () => {
+    return {
+      eventName: heading,
+      eventStart: dayjs(event.startDate),
+      eventEnd: dayjs(event.endDate),
+      eventType: type,
+      eventCategory: category,
+      eventSubcategory: tags,
+      eventVenue: venue,
+      rulesLink: ruleBookLink,
+      eventPoster: new File([new Blob()], "image.png", {type:"image/png"}),
+      eventDescription: description,
+      pocName: pocName,
+      pocNumber: pocNumber,
+      dropzoneKey: 1,
+      minTeamSize: minTeamSize,
+      maxTeamSize: maxTeamSize,
+    }
+  }
+
+  const formValues = eventDefaultValue();
+
+  const handleEditEventClick = (event: any) => {
+    console.log('updated form Values', formValues)
+  }
+
   return (
     <Layout>
+      {
+        eventDialogOpen &&
+        <EditEventDialog
+          onClose={handleAddEventClose}
+          open={eventDialogOpen}
+          setOpen={handleAddEventOpen}
+          defaultEventValue={formValues}
+        />
+      }
       <div className="h-full bg-[url('/bg1.png')] w-full bg-cover h-screen overflow-hidden scrollbar-hide">
-        <div className="w-[80vw] mx-auto my-40 grid grid-cols-5 justify-items-center items-center p-2 glassmorphism text-white">
+        <div className="w-[80vw] mx-auto my-40 grid grid-cols-5 justify-items-center items-center p-5 glassmorphism text-white">
           <div className='col-span-2'>
             <Image
               src={image}
@@ -110,6 +157,14 @@ function Index({ event }: Props) {
                 <span>{pocNumber}</span>
               </div>
             </div>
+
+            <Button
+              onClick={handleAddEventOpen}
+              variant="contained"
+              sx={{ mt: 5, width: '150px', mx: 'auto' }}
+            >
+              Edit Event
+            </Button>
           </div>
         </div>
       </div>

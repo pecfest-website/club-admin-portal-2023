@@ -38,7 +38,7 @@ const DashboardPage = (props: DashboardPageProps) => {
 
     const handleAddEventClose = () => {
         setEventDialogOpen(false);
-    };
+    };  
 
     return (
         <Layout>
