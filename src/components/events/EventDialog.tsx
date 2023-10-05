@@ -145,7 +145,7 @@ const EventDialog = ({ onClose, open }: EventDialogPropType) => {
     const storageRef = ref(storage, `events/${formValues.eventName}`);
     const result = await uploadBytes(storageRef, formValues.eventPoster as File);
 
-    const downloadUrl = getDownloadURL(storageRef);
+    const downloadUrl = await getDownloadURL(storageRef);
     return downloadUrl;
   }
 
