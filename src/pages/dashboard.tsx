@@ -1,5 +1,4 @@
 import Layout from "@/components/Layout";
-import ProtectedRoute from "@/components/ProtectedRoute";
 import {
     Box,
     Button,
@@ -12,22 +11,26 @@ import AddBoxOutlinedIcon from "@mui/icons-material/AddBoxOutlined";
 import Head from "next/head";
 import { useState } from "react";
 import EventDialog from "@/components/events/EventDialog";
-import { useAuth } from "@/context/AuthContext";
 import { Event } from "@/types/event";
 import EventCard from "@/components/events/EventCard";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import { db } from "@/serverless/config";
+import { getSession, useSession } from "next-auth/react";
+import { useRouter } from "next/router";
 
 interface DashboardPageProps {
     events: Event[];
 }
 const DashboardPage = (props: DashboardPageProps) => {
-    const { user } = useAuth();
-
+    const router = useRouter();
+    const session = useSession({
+        required: true,
+        onUnauthenticated() {
+            router.replace("/login");
+        },
+    });
     const [eventDialogOpen, setEventDialogOpen] = useState(false);
     const event_list = props.events;
-
-    console.log(event_list)
 
     const handleAddEventOpen = () => {
         setEventDialogOpen(true);
@@ -38,55 +41,61 @@ const DashboardPage = (props: DashboardPageProps) => {
     };
 
     return (
-        <ProtectedRoute>
-            <Layout>
-                <Head>
-                    <title>Admin Panel | PECFEST&apos;23</title>
-                </Head>
-                <div className="flex py-2  h-full w-full  bg-cover bg-opacity-60 bg-[url('/bg2.png')]">
-                    <Container component={`main`}>
-                        <CssBaseline />
-                        <Box
+        <Layout>
+            <Head>
+                <title>Admin Panel | PECFEST&apos;23</title>
+            </Head>
+            <div className="flex h-full w-full bg-cover bg-[url('/bg2.png')] items-center justify-center">
+                <Container
+                    component={`main`}
+                    className="h-full w-full p-4 m-0 scrollbar-hide overflow-y-scroll"
+                >
+                    <CssBaseline />
+                    <Box
+                        component={"div"}
+                        className="space-y-2 w-full"
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            flexDirection: "column",
+                            justifyContent: "center",
+                            gap: "1em",
+                            margin: "auto",
+                            marginTop: 8,
+                        }}
+                    >
+                        <Typography
+                            sx={{
+                                width: `100%`,
+                                textAlign: `center`,
+                                fontFamily: "serif",
+                                fontWeight: 800,
+                            }}
+                            variant={`h5`}
+                            className={
+                                "text-white text-lg font-extrabold font-sans drop-shadow-xl glassmorphism py-2 rounded-xl"
+                            }
+                        >
+                            Events by: {session && session.data?.user?.email}
+                        </Typography>
+                        <Button
                             sx={{
                                 display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                flexWrap: "wrap",
                                 gap: "1em",
-                                margin: "auto",
-                                marginTop: 8,
+                                alignItems: "center",
                             }}
+                            variant={`contained`}
+                            onClick={handleAddEventOpen}
                         >
-                            <Typography
-                                sx={{
-                                    width: `100%`,
-                                    textAlign: `center`,
-                                    fontFamily: "serif",
-                                    fontWeight: 800,
-                                }}
-                                variant={`h5`}
-                                className={
-                                    "text-white text-lg font-extrabold font-sans drop-shadow-xl glassmorphism py-2 rounded-xl"
-                                }
-                            >
-                                Events by: {user && user.email}
-                            </Typography>
-                            <Button
-                                sx={{
-                                    display: "flex",
-                                    gap: "1em",
-                                    alignItems: "center",
-                                }}
-                                variant={`contained`}
-                                onClick={handleAddEventOpen}
-                            >
-                                Add an Event <AddBoxOutlinedIcon />
-                            </Button>
-                            <EventDialog
-                                open={eventDialogOpen}
-                                onClose={handleAddEventClose}
-                            />
-                        </Box>
+                            Add an Event <AddBoxOutlinedIcon />
+                        </Button>
+                        <EventDialog
+                            open={eventDialogOpen}
+                            setOpen={setEventDialogOpen}
+                            onClose={handleAddEventClose}
+                        />
+                    </Box>
+                    <div className="w-full">
                         <Grid
                             sx={{
                                 mt: 8,
@@ -110,17 +119,31 @@ const DashboardPage = (props: DashboardPageProps) => {
                                     </div>
                                 ))}
                         </Grid>
-                    </Container>
-                </div>
-            </Layout>
-        </ProtectedRoute>
+                    </div>
+                </Container>
+            </div>
+        </Layout>
     );
 };
 
 export default DashboardPage;
 
 export async function getServerSideProps(context: any) {
-    const eventsRef = collection(db, "events");
+    const { req } = context;
+    const session = await getSession({ req });
+    if (session == null) {
+        return {
+            redirect: {
+                destination: "/",
+                permanent: true,
+            },
+        };
+    }
+    const email = session.user?.email;
+    const eventsRef = query(
+        collection(db, "events"),
+        where("adminEmail", "==", email)
+    );
     const eventsSnapshot = await getDocs(eventsRef);
 
     let events: Event[] = [];

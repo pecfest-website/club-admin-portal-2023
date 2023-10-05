@@ -1,6 +1,6 @@
 import Layout from "@/components/Layout";
-import { useAuth } from "@/context/AuthContext";
 import { Button } from "@mui/material";
+import { signIn } from "next-auth/react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import React from "react";
@@ -19,13 +19,16 @@ const LoginPage = () => {
         formState: { errors },
     } = methods;
 
-    const { logIn } = useAuth();
     const router = useRouter();
 
     const onSubmit = async (data: LoginType) => {
         try {
-            await logIn(data.email, data.password);
-            router.push("/dashboard");
+            signIn("credentials", {
+                email: data.email,
+                password: data.password,
+                redirect: true,
+                callbackUrl: '/dashboard'
+            });
         } catch (error: any) {
             console.log(error.message);
         }
@@ -94,14 +97,6 @@ const LoginPage = () => {
                             </div>
 
                             <div className="flex justify-center pt-8">
-                                {/* <button
-                                    type="submit"
-                                    className={`h-12 text-center w-2/3 bg-blue-400 border-2 rounded-md hover:shadow-lg hover:bg-blue-800 text-lg transition`}
-                                >
-                                    <p className="capitalize text-white font-normal">
-                                        submit
-                                    </p>
-                                </button> */}
                                 <Button
                                     type="submit"
                                     variant="contained"

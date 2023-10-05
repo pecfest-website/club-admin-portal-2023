@@ -1,23 +1,12 @@
-import Image from "next/image";
 import { Inter } from "next/font/google";
-import { Event } from "@/types/event";
 import Head from "next/head";
 import Layout from "@/components/Layout";
 import { useRouter } from "next/router";
-import { useAuth } from "@/context/AuthContext";
-import { useEffect } from "react";
+import { getSession, signIn } from "next-auth/react";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
-    const router = useRouter();
-    const { user } = useAuth();
-
-    useEffect(() => {
-        if (user.uid) {
-            router.push("/dashboard");
-        }
-    }, [router, user]);
     return (
         <Layout>
             <div
@@ -32,7 +21,7 @@ export default function Home() {
                     </h1>
                     <div
                         className="border rounded-md px-6 py-2 flex items-center justify-center cursor-pointer hover:bg-gray-100 hover:bg-opacity-20"
-                        onClick={() => router.push("/login")}
+                        onClick={() => signIn()}
                     >
                         <p className="text-2xl text-white font-bold">
                             Login to continue!
@@ -56,4 +45,20 @@ export default function Home() {
             </div>
         </Layout>
     );
+}
+
+export async function getServerSideProps(context: any) {
+    const { req } = context;
+    const session = await getSession({ req });
+    if (session) {
+        return {
+            redirect: {
+                destination: "/dashboard",
+                permanent: true,
+            },
+        };
+    }
+    return {
+        props: {},
+    };
 }
