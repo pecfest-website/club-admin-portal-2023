@@ -57,6 +57,7 @@ const EventDialog = ({ onClose, open, setOpen }: EventDialogPropType) => {
         eventSubcategory: [] as string[],
         eventVenue: "",
         rulesLink: "",
+        clubName: "",
         eventPoster: null as any,
         eventDescription: "",
         pocName: "",
@@ -151,9 +152,9 @@ const EventDialog = ({ onClose, open, setOpen }: EventDialogPropType) => {
     };
 
     const uploadImage = async () => {
-        const storageRef = ref(storage, `events/${formValues.eventName}.png`);
+        const storageRef = ref(storage, `events/${formValues.eventName}.jpeg`);
         await uploadBytes(storageRef, formValues.eventPoster, {
-            contentType: "image/png",
+            contentType: "image/jpeg",
         });
         const downloadUrl = await getDownloadURL(storageRef);
         return downloadUrl;
@@ -403,6 +404,7 @@ const EventDialog = ({ onClose, open, setOpen }: EventDialogPropType) => {
                         {/* Event Venue and Rulebook */}
                         <div className="p-2">
                             <TextField
+                                required
                                 fullWidth
                                 name="eventVenue"
                                 value={formValues.eventVenue}
@@ -421,12 +423,23 @@ const EventDialog = ({ onClose, open, setOpen }: EventDialogPropType) => {
                                 label="Link to Rule Book"
                             />
                         </div>
+                        <div className="p-2">
+                            <TextField
+                                fullWidth
+                                name="clubName"
+                                value={formValues.clubName}
+                                onChange={handleChange}
+                                variant="outlined"
+                                label="Club organising the event"
+                                helperText="Enter official Acronym of club (ACM, SCC, SAASC etc)"
+                            />
+                        </div>
 
                         {/* Attach Event Poster (WORKING! SO DIDN'T TOUCH)*/}
                         <div className="p-2">
                             <DropzoneArea
                                 // name="eventPoster"
-                                acceptedFiles={["image/png"]}
+                                acceptedFiles={["image/jpeg"]}
                                 dropzoneText={"Attach Event Poster"}
                                 filesLimit={1}
                                 Icon={UploadFileIcon}
@@ -542,6 +555,7 @@ const getDefaultFormValue = () => {
         eventPoster: {} as object,
         eventDescription: "",
         pocName: "",
+        clubName: "",
         pocNumber: "" as any,
         dropzoneKey: 1,
         minTeamSize: 1,
