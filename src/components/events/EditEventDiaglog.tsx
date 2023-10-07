@@ -72,7 +72,13 @@ const MenuProps = {
     },
 };
 
-const EditEventDialog = ({ onClose, open, setOpen, defaultEventValue, eventId }: EventDialogPropType) => {
+const EditEventDialog = ({
+    onClose,
+    open,
+    setOpen,
+    defaultEventValue,
+    eventId,
+}: EventDialogPropType) => {
     const router = useRouter();
     const { data: session } = useSession();
 
@@ -97,7 +103,14 @@ const EditEventDialog = ({ onClose, open, setOpen, defaultEventValue, eventId }:
         if ("target" in event) {
             event.preventDefault();
             const name = event.target.name;
-            const value = event.target.value;
+            let value;
+            if (name === "minTeamSize" || name === "maxTeamSize") {
+                value = event.target.value
+                    ? Number.parseInt(event.target.value)
+                    : 0;
+            } else {
+                value = event.target.value;
+            }
             setFormValues({
                 ...formValues,
                 [name]: value,
@@ -144,7 +157,10 @@ const EditEventDialog = ({ onClose, open, setOpen, defaultEventValue, eventId }:
 
         setFormValues({
             ...formValues,
-            eventSubcategory: typeof value === "string" ? [value] as tagType : value as tagType,
+            eventSubcategory:
+                typeof value === "string"
+                    ? ([value] as tagType)
+                    : (value as tagType),
         });
     };
 
@@ -192,9 +208,13 @@ const EditEventDialog = ({ onClose, open, setOpen, defaultEventValue, eventId }:
         };
 
         const docRef = doc(db, `events/${eventId}`);
-        await setDoc(docRef, {
-            ...eventData
-        }, {merge: true})
+        await setDoc(
+            docRef,
+            {
+                ...eventData,
+            },
+            { merge: true }
+        );
 
         setEventCreationStatus("SUCCESS: Event Edited Successfully");
         setLoading(false);
@@ -256,7 +276,10 @@ const EditEventDialog = ({ onClose, open, setOpen, defaultEventValue, eventId }:
                                         label="Event Start Date and Time"
                                         orientation="landscape"
                                         slotProps={{
-                                            textField: { fullWidth: true, required: true },
+                                            textField: {
+                                                fullWidth: true,
+                                                required: true,
+                                            },
                                         }}
                                         onChange={handleStartDateTimeChange}
                                     />
@@ -272,7 +295,10 @@ const EditEventDialog = ({ onClose, open, setOpen, defaultEventValue, eventId }:
                                         label="Event End Date and Time"
                                         orientation="landscape"
                                         slotProps={{
-                                            textField: { fullWidth: true, required: true },
+                                            textField: {
+                                                fullWidth: true,
+                                                required: true,
+                                            },
                                         }}
                                         onChange={handleEndDateTimeChange}
                                     />

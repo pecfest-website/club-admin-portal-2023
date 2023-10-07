@@ -86,11 +86,19 @@ const EventDialog = ({ onClose, open, setOpen }: EventDialogPropType) => {
         if ("target" in event) {
             event.preventDefault();
             const name = event.target.name;
-            const value = event.target.value;
+            let value;
+            if (name === "minTeamSize" || name === "maxTeamSize") {
+                value = event.target.value
+                    ? Number.parseInt(event.target.value)
+                    : 0;
+            } else {
+                value = event.target.value;
+            }
             setFormValues({
                 ...formValues,
                 [name]: value,
             });
+            console.log(typeof value);
         } else {
             const img = document.createElement("img");
             let is_square = true;
