@@ -10,7 +10,7 @@ import { useRouter } from 'next/router'
 import React, { useState } from 'react'
 import dayjs, { Dayjs } from 'dayjs';
 import Head from 'next/head';
-
+import GalleryDialog from '@/components/events/GalleryDialog';
 
 const badge = (text: string, key: number) => {
   return <span key={key} className="py-1 px-3 align-middle text-white bg-blue-700 text-xs font-medium mr-2 rounded-full">{text}</span>
@@ -30,6 +30,7 @@ interface Props {
 
 function Index({ event }: Props) {
   const [eventDialogOpen, setEventDialogOpen] = useState<boolean>(false);
+
   const handleAddEventOpen = () => {
     setEventDialogOpen(true);
   };
@@ -93,7 +94,7 @@ function Index({ event }: Props) {
       <Head>
         <title>{`${heading} | PECFEST'23`}</title>
       </Head>
-      <div className="h-full bg-[url('/bg1.png')] w-full bg-cover h-screen overflow-hidden scrollbar-hide">
+      <div className="bg-[url('/bg1.png')] w-full bg-cover h-screen overflow-hidden scrollbar-hide">
         <div className="w-[80vw] mx-auto my-40 grid grid-cols-5 justify-items-center items-center p-5 glassmorphism text-white">
           <div className='col-span-2'>
             <Image

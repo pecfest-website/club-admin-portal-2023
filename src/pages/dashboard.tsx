@@ -17,6 +17,8 @@ import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import { db } from "@/serverless/config";
 import { getSession, useSession } from "next-auth/react";
 import { useRouter } from "next/router";
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import GalleryDialog from "@/components/events/GalleryDialog";
 
 interface DashboardPageProps {
     events: Event[];
@@ -30,6 +32,17 @@ const DashboardPage = (props: DashboardPageProps) => {
         },
     });
     const [eventDialogOpen, setEventDialogOpen] = useState(false);
+    const [galleryDialogOpen, setGalleryDialogOpen] = useState<boolean>(false);
+
+
+    const openGalleryDialog = () => {
+        setGalleryDialogOpen(true);
+    }
+
+    const handleGalleryDialogClose = () => {
+        setGalleryDialogOpen(false);
+    }
+    
     const event_list = props.events;
 
     const handleAddEventOpen = () => {
@@ -38,7 +51,7 @@ const DashboardPage = (props: DashboardPageProps) => {
 
     const handleAddEventClose = () => {
         setEventDialogOpen(false);
-    };  
+    };
 
     return (
         <Layout>
@@ -78,21 +91,25 @@ const DashboardPage = (props: DashboardPageProps) => {
                         >
                             Events by: {session && session.data?.user?.email}
                         </Typography>
-                        <Button
-                            sx={{
-                                display: "flex",
-                                gap: "1em",
-                                alignItems: "center",
-                            }}
-                            variant={`contained`}
-                            onClick={handleAddEventOpen}
-                        >
-                            Add an Event <AddBoxOutlinedIcon />
-                        </Button>
+
+                        <div>
+                            <button type="submit" className="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2 dark:bg-blue-600 darkbg-blue-700 focus:outline-none dark:focus:ring-blue-800 ml-5 mr-5" onClick={handleAddEventOpen}>
+                                Add an Event <AddBoxOutlinedIcon />
+                            </button>
+                            <button type="submit" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 ml-5" onClick={openGalleryDialog}>
+                                Upload to Gallery <CloudUploadIcon />
+                            </button>
+                        </div>
                         <EventDialog
                             open={eventDialogOpen}
                             setOpen={setEventDialogOpen}
                             onClose={handleAddEventClose}
+                        />
+
+                        <GalleryDialog
+                            open={galleryDialogOpen}
+                            setOpen={setGalleryDialogOpen}
+                            onClose={handleGalleryDialogClose}
                         />
                     </Box>
                     <div className="w-full">
@@ -122,7 +139,7 @@ const DashboardPage = (props: DashboardPageProps) => {
                     </div>
                 </Container>
             </div>
-        </Layout>
+        </Layout >
     );
 };
 

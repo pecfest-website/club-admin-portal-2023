@@ -174,7 +174,6 @@ const EventDialog = ({ onClose, open, setOpen }: EventDialogPropType) => {
 
         let eventPosterUrl = "";
         if (formValues.eventPoster) {
-            console.log(formValues.eventPoster);
             eventPosterUrl = await uploadImage();
         }
 
