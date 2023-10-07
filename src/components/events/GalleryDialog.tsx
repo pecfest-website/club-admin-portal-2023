@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Alert, Dialog, TextField } from '@mui/material';
+import { Alert, Dialog, Snackbar, TextField } from '@mui/material';
 import CloseIcon from "@mui/icons-material/Close";
 import { DropzoneArea } from "mui-file-dropzone";
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
@@ -19,6 +19,7 @@ export default function GalleryDialog({ onClose, open, setOpen }: Props) {
   const [dropzoneKey, setDropzoneKey] = useState(1);
   const [imageName, setImageName] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const [imageUploadSuccess, setImageUploadSuccess] = useState<string | null>();
 
   const uploadImage = async () => {
     const storageRef = ref(storage, `gallery/${imageName + getRandomKey()}.jpeg`);
@@ -27,6 +28,11 @@ export default function GalleryDialog({ onClose, open, setOpen }: Props) {
     });
     const downloadUrl = await getDownloadURL(storageRef);
     return downloadUrl;
+  };
+
+  const handleSnackbarClose = () => {
+    setImageUploadSuccess(null);
+    setOpen(false);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -38,32 +44,22 @@ export default function GalleryDialog({ onClose, open, setOpen }: Props) {
     }
     console.log(imageLink);
     const galleryRef = collection(db, "gallery");
-    
+
     await addDoc(galleryRef, galleryImage);
-    setOpen(false);
+    console.log(`Image ${imageName} uploaded Successfully`)
+    setImageUploadSuccess(`SUCCESS: Image ${imageName} Uploaded Successfully.`)
     setLoading(false);
+    setImageName('');
   }
 
   const handleChange = (event: File[]) => {
     console.log(event);
     const img = document.createElement("img");
-    let is_square = true;
-    
+
     if (event && "length" in event && event[length]) {
       img.onload = (ev: any) => {
-        if (img.width !== img.height) {
-          is_square = false;
-        }
-
-        console.log(img.width, img.height);
-        if (is_square) {
-          setImageDimensionError(false);
-          setImage(event[0]);
-        } else {
-          setImageDimensionError(true);
-          const prev = dropzoneKey;
-          setDropzoneKey(1 - prev);
-        }
+        setImageDimensionError(false);
+        setImage(event[0]);
       };
 
       img.src = URL.createObjectURL(event[0]);
@@ -104,7 +100,6 @@ export default function GalleryDialog({ onClose, open, setOpen }: Props) {
 
           <div className="p-2">
             <DropzoneArea
-              // name="eventPoster"
               acceptedFiles={["image/jpeg"]}
               dropzoneText={"Attach Event Poster"}
               filesLimit={1}
@@ -120,21 +115,29 @@ export default function GalleryDialog({ onClose, open, setOpen }: Props) {
                 Please Upload Posters In A 1:1 Aspect Ratio
               </Alert>
             )}
-
-            <p className='text-[16px]'>
-              <span className='font-bold'>NOTE: </span>
-              Keep the image dimension 1:1.
-            </p>
           </div>
 
           <div className='flex flex-row-reverse'>
             <button type="submit" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 my-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
               {loading ? "Uploading..." : `Upload `}
-              {!loading &&  <CloudUploadIcon />}
+              {!loading && <CloudUploadIcon />}
             </button>
           </div>
         </form>
       </div >
+      <Snackbar
+        open={imageUploadSuccess ? true : false}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          {imageUploadSuccess}
+        </Alert>
+      </Snackbar>
     </Dialog >
   )
 }
