@@ -21,7 +21,7 @@ export default function GalleryDialog({ onClose, open, setOpen }: Props) {
   const [loading, setLoading] = useState<boolean>(false);
 
   const uploadImage = async () => {
-    const storageRef = ref(storage, `gallery/${imageName + getRandomKey()}.jpeg`);
+    const storageRef = ref(storage, `gallery/${imageName + '-' + getRandomKey()}.jpeg`);
     await uploadBytes(storageRef, image, {
       contentType: "image/jpeg",
     });
@@ -36,7 +36,6 @@ export default function GalleryDialog({ onClose, open, setOpen }: Props) {
     const galleryImage = {
       image: imageLink
     }
-    console.log(imageLink);
     const galleryRef = collection(db, "gallery");
     
     await addDoc(galleryRef, galleryImage);
@@ -51,19 +50,8 @@ export default function GalleryDialog({ onClose, open, setOpen }: Props) {
     
     if (event && "length" in event && event[length]) {
       img.onload = (ev: any) => {
-        if (img.width !== img.height) {
-          is_square = false;
-        }
-
-        console.log(img.width, img.height);
-        if (is_square) {
           setImageDimensionError(false);
           setImage(event[0]);
-        } else {
-          setImageDimensionError(true);
-          const prev = dropzoneKey;
-          setDropzoneKey(1 - prev);
-        }
       };
 
       img.src = URL.createObjectURL(event[0]);
@@ -109,22 +97,12 @@ export default function GalleryDialog({ onClose, open, setOpen }: Props) {
               dropzoneText={"Attach Event Poster"}
               filesLimit={1}
               Icon={CloudUploadIcon}
-              maxFileSize={204800}
+              maxFileSize={5242880}
               clearOnUnmount
               key={1}
               fileObjects={undefined}
               onChange={handleChange}
             />
-            {imageDimensionError && (
-              <Alert severity="warning">
-                Please Upload Posters In A 1:1 Aspect Ratio
-              </Alert>
-            )}
-
-            <p className='text-[16px]'>
-              <span className='font-bold'>NOTE: </span>
-              Keep the image dimension 1:1.
-            </p>
           </div>
 
           <div className='flex flex-row-reverse'>
