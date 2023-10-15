@@ -35,7 +35,7 @@ type EventDialogPropType = {
         eventStart: Dayjs;
         eventEnd: Dayjs;
         eventType: "Individual" | "Team";
-        eventCategory: "Tehnical" | "Cultural" | "Mega shows" | "Workshops";
+        eventCategory: "Tehnical" | "Cultural" | "Mega Shows" | "Workshops";
         eventSubcategory: Array<
             | "Dance"
             | "Music"
