@@ -2,7 +2,7 @@ export interface Team {
     paymentProof: string;
     paymentId: string;
     teamName: string;
-    teamSize: string;
+    teamSize: string | number;
     usersData: TeamMember[];
 }
 

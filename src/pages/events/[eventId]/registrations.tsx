@@ -41,7 +41,7 @@ interface Props {
 function Registrations({ event, participants }: Props) {
     const saveAsExcel = () => {
         if (participants && participants.length > 0) {
-            if (event.type == "Individual") {
+            if (event.type == "Individual" && event.category != "Mega Shows") {
                 const heading = [["Name", "Email Id", "College", "Contact"]];
                 const file = participants.map((user: Participant) => [
                     `${user.name}`,
@@ -111,7 +111,8 @@ function Registrations({ event, participants }: Props) {
                     <h1 className="text-center text-4xl py-4 glassmorphism w-full text-white font-extrabold">
                         {event.name}
                     </h1>
-                    {event.type == "Individual" ? (
+                    {event.type == "Individual" &&
+                    event.category != "Mega Shows" ? (
                         <div>
                             <DialogTitle>
                                 Registered Users -{" "}
@@ -333,6 +334,8 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
             ...doc.data(),
         };
     });
+
+    console.log(participants);
 
     return {
         props: {
