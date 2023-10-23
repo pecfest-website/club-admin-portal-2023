@@ -4,6 +4,7 @@ export interface Team {
     teamName: string;
     teamSize: string | number;
     usersData: TeamMember[];
+    accomodation: boolean;
 }
 
 export interface TeamMember {

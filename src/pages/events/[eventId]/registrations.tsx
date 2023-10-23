@@ -32,6 +32,7 @@ import { Participant } from "@/types/participant";
 import { Team, TeamMember } from "@/types/team";
 import Layout from "@/components/Layout";
 import Head from "next/head";
+import { addTeam } from "@/scripts/scc_utc_fix";
 
 interface Props {
     event: Event;
@@ -67,6 +68,7 @@ function Registrations({ event, participants }: Props) {
                         "Name",
                         "Email Id",
                         "Contact",
+                        "Accomodation",
                         "Payment Id",
                         "Payment Proof",
                     ],
@@ -77,8 +79,8 @@ function Registrations({ event, participants }: Props) {
                             user.teamName,
                             `${member.name}`,
                             member.userId,
-                            // member.college ? member.college : "",
                             member.phoneNumber ? member.phoneNumber : "",
+                            user.accomodation ? "YES": "NO",
                             user.paymentId,
                             user.paymentProof,
                         ])
@@ -96,7 +98,6 @@ function Registrations({ event, participants }: Props) {
                     `${event.name}`
                 );
                 XLSX.writeFile(workbook, `${event.name}.xlsx`);
-                console.log(file);
             }
         }
     };
@@ -221,21 +222,26 @@ function Registrations({ event, participants }: Props) {
                                                             Size:{" "}
                                                             {user.teamSize}
                                                         </Typography>
-                                                        <Typography>
-                                                            Payment ID :{" "}
-                                                            {user.paymentId}
-                                                        </Typography>
-                                                        <Button>
-                                                            <a
-                                                                href={
-                                                                    user.paymentProof
-                                                                }
-                                                                target="_blank"
-                                                                referrerPolicy="no-referrer"
-                                                            >
-                                                                Payment Proof
-                                                            </a>
-                                                        </Button>
+                                                        {user.paymentId ? (
+                                                            <Typography>
+                                                                Payment ID :{" "}
+                                                                {user.paymentId}
+                                                            </Typography>
+                                                        ) : null}
+                                                        {user.paymentProof ? (
+                                                            <Button>
+                                                                <a
+                                                                    href={
+                                                                        user.paymentProof
+                                                                    }
+                                                                    target="_blank"
+                                                                    referrerPolicy="no-referrer"
+                                                                >
+                                                                    Payment
+                                                                    Proof
+                                                                </a>
+                                                            </Button>
+                                                        ) : null}
                                                     </div>
                                                 </AccordionSummary>
                                                 <AccordionDetails>
@@ -334,8 +340,6 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
             ...doc.data(),
         };
     });
-
-    console.log(participants);
 
     return {
         props: {

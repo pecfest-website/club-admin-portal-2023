@@ -45,14 +45,12 @@ export default function GalleryDialog({ onClose, open, setOpen }: Props) {
     const galleryRef = collection(db, "gallery");
 
     await addDoc(galleryRef, galleryImage);
-    console.log(`Image ${imageName} uploaded Successfully`)
     setImageUploadSuccess(`SUCCESS: Image ${imageName} Uploaded Successfully.`)
     setLoading(false);
     setImageName('');
   }
 
   const handleChange = (event: File[]) => {
-    console.log(event);
     const img = document.createElement("img");
 
     if (event && "length" in event && event[length]) {
