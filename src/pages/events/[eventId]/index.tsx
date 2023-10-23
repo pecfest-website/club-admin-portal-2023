@@ -204,7 +204,6 @@ const get = (dateObj: Dayjs, key: string) => {
 
 const getDateTimeString = (dateString: string) => {
   const dateObj = dayjs(dateString);
-  console.log(dateObj)
   const date = get(dateObj, '$D');
   const month = get(dateObj, '$M');
   const year = get(dateObj, '$y');

@@ -98,7 +98,6 @@ const EventDialog = ({ onClose, open, setOpen }: EventDialogPropType) => {
                 ...formValues,
                 [name]: value,
             });
-            console.log(typeof value);
         } else {
             const img = document.createElement("img");
             let is_square = true;
