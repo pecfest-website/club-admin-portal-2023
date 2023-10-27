@@ -4,4 +4,5 @@ export interface Participant {
     contact: string;
     college: string;
     id: string;
+    userId: string;
 }

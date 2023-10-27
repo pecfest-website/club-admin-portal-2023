@@ -11,4 +11,5 @@ export interface TeamMember {
     name: string;
     phoneNumber: string;
     userId: string;
+    userUniqueId?: string | null;
 }
