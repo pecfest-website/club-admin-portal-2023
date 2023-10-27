@@ -1,16 +1,10 @@
 import React from "react";
-import { ExpandMore, FileDownload, PeopleAlt } from "@mui/icons-material";
+import { ExpandMore, FileDownload } from "@mui/icons-material";
 import {
     Accordion,
     AccordionDetails,
     AccordionSummary,
     Button,
-    Card,
-    CardActions,
-    CardContent,
-    CardHeader,
-    CardMedia,
-    Dialog,
     DialogContent,
     DialogTitle,
     IconButton,
@@ -20,19 +14,24 @@ import {
     TableContainer,
     TableHead,
     TableRow,
-    Tooltip,
     Typography,
 } from "@mui/material";
 import { GetServerSidePropsContext } from "next";
 import * as XLSX from "xlsx";
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import {
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    query,
+    where,
+} from "firebase/firestore";
 import { db } from "@/serverless/config";
 import { Event } from "@/types/event";
 import { Participant } from "@/types/participant";
 import { Team, TeamMember } from "@/types/team";
 import Layout from "@/components/Layout";
 import Head from "next/head";
-import { addTeam } from "@/scripts/scc_utc_fix";
 
 interface Props {
     event: Event;
@@ -43,10 +42,13 @@ function Registrations({ event, participants }: Props) {
     const saveAsExcel = () => {
         if (participants && participants.length > 0) {
             if (event.type == "Individual" && event.category != "Mega Shows") {
-                const heading = [["Name", "Email Id", "College", "Contact"]];
+                const heading = [
+                    ["Name", "Email Id", "User Id", "College", "Contact"],
+                ];
                 const file = participants.map((user: Participant) => [
                     `${user.name}`,
                     user.email,
+                    user.userId ? user.userId : "NA",
                     user.college ? user.college : "",
                     user.contact ? user.contact : "",
                 ]);
@@ -67,6 +69,7 @@ function Registrations({ event, participants }: Props) {
                         "Team Name",
                         "Name",
                         "Email Id",
+                        "User Id",
                         "Contact",
                         "Accomodation",
                         "Payment Id",
@@ -79,8 +82,9 @@ function Registrations({ event, participants }: Props) {
                             user.teamName,
                             `${member.name}`,
                             member.userId,
+                            member.userUniqueId ? member.userUniqueId : "NA",
                             member.phoneNumber ? member.phoneNumber : "",
-                            user.accomodation ? "YES": "NO",
+                            user.accomodation ? "YES" : "NO",
                             user.paymentId,
                             user.paymentProof,
                         ])
@@ -144,6 +148,9 @@ function Registrations({ event, participants }: Props) {
                                                 <TableCell align="center">
                                                     Contact
                                                 </TableCell>
+                                                <TableCell align="center">
+                                                    User ID
+                                                </TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
@@ -180,6 +187,13 @@ function Registrations({ event, participants }: Props) {
                                                                 <TableCell align="center">
                                                                     {
                                                                         user.contact
+                                                                    }
+                                                                </TableCell>
+                                                            )}
+                                                            {user.userId && (
+                                                                <TableCell align="center">
+                                                                    {
+                                                                        user.userId
                                                                     }
                                                                 </TableCell>
                                                             )}
@@ -260,6 +274,9 @@ function Registrations({ event, participants }: Props) {
                                                                 <TableCell align="center">
                                                                     Contact
                                                                 </TableCell>
+                                                                <TableCell align="center">
+                                                                    User ID
+                                                                </TableCell>
                                                             </TableRow>
                                                         </TableHead>
                                                         <TableBody>
@@ -299,6 +316,13 @@ function Registrations({ event, participants }: Props) {
                                                                                     }
                                                                                 </TableCell>
                                                                             )}
+                                                                            {member.userUniqueId && (
+                                                                                <TableCell align="center">
+                                                                                    {
+                                                                                        member.userUniqueId
+                                                                                    }
+                                                                                </TableCell>
+                                                                            )}
                                                                         </TableRow>
                                                                     )
                                                                 )}
@@ -334,12 +358,58 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         ...eventData.data(),
     } as Event;
 
-    const participants = registrations.docs.map((doc) => {
-        return {
-            id: doc.id,
-            ...doc.data(),
-        };
-    });
+    const participants = await Promise.all(
+        registrations.docs.map(async (doc) => {
+            const data = doc.data();
+            if (data["usersData"]) {
+                // TEAM
+                const participants = await Promise.all(
+                    data["usersData"].map(async (userData: TeamMember) => {
+                        const userId = (
+                            await getDocs(
+                                query(
+                                    collection(db, "users"),
+                                    where("email", "==", userData?.userId)
+                                )
+                            )
+                        ).docs?.[0]?.id;
+
+                        return {
+                            userUniqueId: userId ? userId : null,
+                            ...userData,
+                        };
+                    })
+                );
+
+                return {
+                    id: doc.id,
+                    teamName: data.teamName,
+                    teamSize: data.teamSize,
+                    paymentId: data.paymentId ?? "",
+                    paymentProof: data.paymentProof ?? "",
+                    usersData: participants,
+                };
+            } else {
+                // INDIVIDUAL
+                const userId = (
+                    await getDocs(
+                        query(
+                            collection(db, "users"),
+                            where("email", "==", data?.email)
+                        )
+                    )
+                ).docs[0].id;
+                const participantData = {
+                    userId,
+                    ...data,
+                };
+                return {
+                    id: doc.id,
+                    ...participantData,
+                };
+            }
+        })
+    );
 
     return {
         props: {
