@@ -5,6 +5,7 @@ import {
     Checkbox,
     Dialog,
     FormControl,
+    FormControlLabel,
     InputLabel,
     MenuItem,
     Select,
@@ -65,6 +66,7 @@ const EventDialog = ({ onClose, open, setOpen }: EventDialogPropType) => {
         dropzoneKey: 1,
         minTeamSize: 1,
         maxTeamSize: 1,
+        paidRegistration: false,
     });
 
     const [imageDimensionError, setImageDimensionError] = useState(false);
@@ -200,6 +202,7 @@ const EventDialog = ({ onClose, open, setOpen }: EventDialogPropType) => {
             minTeamSize: formValues.minTeamSize,
             maxTeamSize: formValues.maxTeamSize,
             adminEmail: session?.user?.email,
+            paidRegistration: formValues.paidRegistration,
         };
 
         const eventsRef = collection(db, "events");
@@ -252,6 +255,21 @@ const EventDialog = ({ onClose, open, setOpen }: EventDialogPropType) => {
                                 required={true}
                             />
                         </div>
+
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={formValues.paidRegistration}
+                                    onChange={(e) =>
+                                        setFormValues({
+                                            ...formValues,
+                                            paidRegistration: e.target.checked,
+                                        })
+                                    }
+                                />
+                            }
+                            label="Paid Registration"
+                        />
 
                         {/* Event Date and Time */}
                         <div className="grid grid-cols-2 p-2">
@@ -566,5 +584,6 @@ const getDefaultFormValue = () => {
         dropzoneKey: 1,
         minTeamSize: 1,
         maxTeamSize: 1,
+        paidRegistration: false,
     };
 };

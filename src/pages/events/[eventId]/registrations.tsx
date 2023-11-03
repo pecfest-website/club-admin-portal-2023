@@ -117,7 +117,8 @@ function Registrations({ event, participants }: Props) {
                         {event.name}
                     </h1>
                     {event.type == "Individual" &&
-                    event.category != "Mega Shows" ? (
+                    event.category != "Mega Shows" &&
+                    !event.paidRegistration ? (
                         <div>
                             <DialogTitle>
                                 Registered Users -{" "}

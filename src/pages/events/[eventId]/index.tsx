@@ -312,7 +312,6 @@ function Index({ event }: Props) {
                             </button>
                         </CardActions>
                     </div>
-                    D
                 </div>
             </div>
         </Layout>
