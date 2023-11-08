@@ -32,6 +32,7 @@ import { Participant } from "@/types/participant";
 import { Team, TeamMember } from "@/types/team";
 import Layout from "@/components/Layout";
 import Head from "next/head";
+import { addTeamRoboRace, copyData } from "@/scripts/roborace_fix";
 
 interface Props {
     event: Event;
