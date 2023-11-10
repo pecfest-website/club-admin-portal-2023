@@ -12,6 +12,7 @@ import {
     SelectChangeEvent,
     Snackbar,
     TextField,
+    Typography,
 } from "@mui/material";
 import { MobileDateTimePicker } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
@@ -67,6 +68,7 @@ const EventDialog = ({ onClose, open, setOpen }: EventDialogPropType) => {
         minTeamSize: 1,
         maxTeamSize: 1,
         paidRegistration: false,
+        paidRegistraionOnlyIfMaterialRequired: false,
     });
 
     const [imageDimensionError, setImageDimensionError] = useState(false);
@@ -203,6 +205,7 @@ const EventDialog = ({ onClose, open, setOpen }: EventDialogPropType) => {
             maxTeamSize: formValues.maxTeamSize,
             adminEmail: session?.user?.email,
             paidRegistration: formValues.paidRegistration,
+            paidRegistraionOnlyIfMaterialRequired: formValues.paidRegistraionOnlyIfMaterialRequired
         };
 
         const eventsRef = collection(db, "events");
@@ -255,7 +258,7 @@ const EventDialog = ({ onClose, open, setOpen }: EventDialogPropType) => {
                                 required={true}
                             />
                         </div>
-
+                        <Typography color={"green"} fontFamily={"monospace"}>Do not check both boxes please</Typography>
                         <FormControlLabel
                             control={
                                 <Checkbox
@@ -271,6 +274,24 @@ const EventDialog = ({ onClose, open, setOpen }: EventDialogPropType) => {
                             label="Paid Registration"
                         />
 
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={
+                                        formValues.paidRegistraionOnlyIfMaterialRequired
+                                    }
+                                    onChange={(e) =>
+                                        setFormValues({
+                                            ...formValues,
+                                            paidRegistraionOnlyIfMaterialRequired:
+                                                e.target.checked,
+                                        })
+                                    }
+                                />
+                            }
+                            label="Paid Registration only if building material required
+                            "
+                        />
                         {/* Event Date and Time */}
                         <div className="grid grid-cols-2 p-2">
                             <div className="pr-1">
@@ -585,5 +606,6 @@ const getDefaultFormValue = () => {
         minTeamSize: 1,
         maxTeamSize: 1,
         paidRegistration: false,
+        paidRegistraionOnlyIfMaterialRequired: false,
     };
 };
