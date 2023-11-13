@@ -206,7 +206,8 @@ export async function getServerSideProps(context: any) {
     const email = session.user?.email;
     const eventsRef = query(
         collection(db, "events"),
-        where("adminEmail", "==", email)
+        where("adminEmail", "==", email),
+        orderBy("name")
     );
     const eventsSnapshot = await getDocs(eventsRef);
 
