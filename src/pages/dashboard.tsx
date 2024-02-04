@@ -21,6 +21,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import GalleryDialog from "@/components/events/GalleryDialog";
 import * as XLSX from "xlsx";
 import { Download } from "@mui/icons-material";
+import { getCollegeReport } from "@/scripts/college_report";
 
 interface DashboardPageProps {
     events: Event[];
@@ -35,6 +36,8 @@ const DashboardPage = (props: DashboardPageProps) => {
     });
     const [eventDialogOpen, setEventDialogOpen] = useState(false);
     const [galleryDialogOpen, setGalleryDialogOpen] = useState<boolean>(false);
+
+    const [loading2, setLoading2] = useState(false);
 
     const openGalleryDialog = () => {
         setGalleryDialogOpen(true);
@@ -146,6 +149,17 @@ const DashboardPage = (props: DashboardPageProps) => {
                                 {loading ? "Loading" : "Download registrations"}{" "}
                                 <Download />
                             </button>
+
+                            <button
+                                type="submit"
+                                className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 ml-5"
+                                onClick={()=>getCollegeReport(loading2, setLoading2)}
+                                disabled={loading2}
+                            >
+                                {loading2 ? "Loading" : "Get college wise report"}{" "}
+                                <Download />
+                            </button>
+
                         </div>
                         <EventDialog
                             open={eventDialogOpen}
